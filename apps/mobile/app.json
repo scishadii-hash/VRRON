@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "VRRON",
+    "slug": "vrron",
+    "scheme": "vrron",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#07070C",
+    "android": {
+      "package": "com.vrron.app"
+    }
+  }
+}

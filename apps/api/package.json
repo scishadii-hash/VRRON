@@ -1,0 +1,14 @@
+{
+  "name": "@vrron/api",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "start": "node src/server.ts",
+    "test": "node --experimental-strip-types --test \"tests/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit -p ."
+  }
+}

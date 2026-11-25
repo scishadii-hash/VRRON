@@ -1,0 +1,24 @@
+{
+  "name": "vrron",
+  "private": true,
+  "version": "0.1.0",
+  "description": "VRRON — One Vision. Infinite Intelligence.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "check": "node scripts/check-config.mjs",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "api:start": "npm run start -w @vrron/api",
+    "mobile:start": "npm run start -w @vrron/mobile"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  }
+}

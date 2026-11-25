@@ -1,0 +1,14 @@
+{
+  "name": "@vrron/mobile",
+  "private": true,
+  "version": "0.1.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@vrron/design": "*"
+  }
+}
