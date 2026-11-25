@@ -106,8 +106,9 @@ export function MainScreen({ fontsReady }: Props) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ assistantId: "general", messages: nextMessages }),
       });
-      const payload = await response.json() as { reply?: string; error?: string };
-      if (!response.ok || !payload.reply) throw new Error(payload.error || "تعذّر الحصول على رد");
+      const payload = await response.json() as { reply?: string; error?: string | { message?: string; code?: string } };
+      const apiError = typeof payload.error === "string" ? payload.error : payload.error?.message;
+      if (!response.ok || !payload.reply) throw new Error(apiError || "تعذّر الحصول على رد");
       setChatMessages((current) => [...current, { role: "assistant", content: payload.reply as string }]);
     } catch {
       setChatError("تعذّر إرسال الرسالة. تأكد من نشر تحديث الـCore ثم جرّب مرة أخرى.");
