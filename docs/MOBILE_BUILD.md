@@ -28,10 +28,16 @@ npx eas-cli init
 
 ## إخراج APK
 
-من داخل `apps/mobile`:
+بعد ربط EAS، ارجع إلى جذر المستودع وشغّل الأمر المختصر:
 
 ```bash
-npx eas-cli build -p android --profile preview
+npm run build:android:preview
+```
+
+وهو يشغّل بناء Android باستخدام profile `preview` الموجود في `apps/mobile/eas.json` ويطلب APK. لمتابعة آخر عمليات البناء:
+
+```bash
+npm run build:android:status
 ```
 
 اختر إعداد Android الذي ينتج APK، وانتظر انتهاء البناء. افتح رابط البناء الناتج من EAS على هاتف Android وثبّت الملف.
