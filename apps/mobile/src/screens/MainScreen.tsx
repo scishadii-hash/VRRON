@@ -61,7 +61,7 @@ export function MainScreen({ fontsReady }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [assistants, setAssistants] = useState<AssistantSummary[]>([]);
   const [registryStatus, setRegistryStatus] = useState<RegistryStatus>("loading");
-  const apiBase = (process.env.EXPO_PUBLIC_VRRON_API_URL ?? "").trim().replace(/\\/$/, "");
+  const apiBase = (process.env.EXPO_PUBLIC_VRRON_API_URL ?? "").trim().replace(/\/$/, "");
 
   useEffect(() => {
     if (!apiBase) {
