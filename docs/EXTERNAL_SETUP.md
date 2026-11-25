@@ -105,6 +105,21 @@ eas build -p android --profile preview
 
 انسخ آخر 30 سطرًا من الخطأ (أو رابط سجل البناء على expo.dev) وأرسلها. المتوقع أن أول بناء قد يحتاج تعديلًا صغيرًا لأن إعداد المونوريبو مع EAS لم يُختبر بعد.
 
-## الاستضافة
+## نشر VRRON Core على Render
 
-لا استضافة في المرحلة 1.1. الـAPI يعمل محليًا أو داخل Codespaces. اختيار الاستضافة يُحسم قبل ربط التطبيق بالـAPI على هاتفك.
+تم تجهيز `render.yaml` في جذر المستودع، والسيرفر يستمع على `0.0.0.0` ويستخدم متغير `PORT` الذي توفره منصة الاستضافة.
+
+1. افتح [Render](https://render.com/) وسجّل الدخول بحساب GitHub المرتبط بالمستودع.
+2. من لوحة Render اختر **New → Blueprint**، ثم اختر المستودع `scishadii-hash/VRRON` والفرع `main`.
+3. راجع الخدمة المكتشفة باسم `vrron-core` من ملف `render.yaml`، ثم اضغط **Apply** لإنشاء ونشر الخدمة.
+4. بعد انتهاء النشر، افتح صفحة الخدمة وانسخ رابطها العام `https://...onrender.com`.
+5. اختبر من المتصفح بإضافة `/health` إلى الرابط. يجب أن ترى JSON يحتوي `status: "ok"`، ثم اختبر `/assistants`.
+
+### ربط تطبيق الهاتف بعنوان الـCore
+
+في [Expo Dashboard](https://expo.dev/)، افتح مشروع VRRON ثم **Environment variables**، وأضف المتغير التالي لبيئة `preview`:
+
+- Name: `EXPO_PUBLIC_VRRON_API_URL`
+- Value: رابط خدمة Render العام فقط، دون `/assistants` أو `/health`، ودون slash في النهاية.
+
+بعد حفظ المتغير، أعد بناء APK من مشروع Expo باستخدام ملف `apps/mobile/eas.json` وملف تعريف `preview`. قيمة `EXPO_PUBLIC_...` تُضمّن وقت البناء؛ لذلك لن يتصل APK القديم بالخدمة تلقائيًا.
