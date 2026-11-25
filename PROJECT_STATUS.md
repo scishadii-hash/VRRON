@@ -1,44 +1,37 @@
 # PROJECT_STATUS
 
 آخر تحديث: 2026-11-25
-المرحلة الحالية: **1.1 (التأسيس)**: الكود مكتوب، وتأكيد التطبيق على الهاتف ما زال مطلوبًا منك.
+المرحلة الحالية: **1.2 — واجهة المحادثة وربط الـCore تجريبيًا**. اختبار التطبيق على Android وإخراج APK ما زالا مطلوبين.
 
-## ما تم تنفيذه
+## المنفّذ
 
-- مونوريبو بـnpm workspaces: `apps/mobile` و`apps/api` و`packages/contract` و`packages/design`.
-- Design Tokens: ألوان، مسافات، أنصاف أقطار، خط IBM Plex Sans Arabic، سلم الخطوط، توهج.
-- تطبيق Expo: إعدادات Android وRTL، وشاشة تأسيس واحدة تعرض حالة الاتجاه والخط، ولا تعرض أي بيانات وهمية.
-- VRRON Core مستقل عن HTTP: Router نقي، Registry، تحميل المساعدين تلقائيًا مع التحقق، واجهة `AIProvider` فقط.
-- API بنقطتين: `GET /health` و`GET /assistants`.
-- VRRON General مسجّل بحالة `enabled: false`، فلا يظهر لأي عميل.
-- إعداد EAS: ملف `preview` لإخراج APK وملف `production` لإخراج AAB.
-- التوثيق: README وARCHITECTURE وEXTERNAL_SETUP وNEXT_STEPS وهذا الملف.
+- Monorepo بـnpm workspaces: `apps/mobile` و`apps/api` و`packages/contract` و`packages/design`.
+- تصميم VRRON Futuristic Premium مع Design Tokens وخط IBM Plex Sans Arabic وRTL.
+- شاشة رئيسية وتبويبات الرئيسية/المحادثات/الإعدادات.
+- شاشة المحادثات تجلب المساعدين من `GET /assistants`.
+- Composer يرسل الرسائل إلى `POST /chat` ويعرض سجل المحادثة، حالة الانتظار، وأخطاء الاتصال.
+- Cloudflare Worker منشور من قبل المستخدم على `https://vrron.sci-shadii.workers.dev` ويعرض `/health` و`/assistants`، ويحتوي كود Workers AI للمحادثة.
+- رابط Worker مضبوط كعنوان افتراضي في تطبيق الهاتف؛ يمكن استبداله بمتغير `EXPO_PUBLIC_VRRON_API_URL` وقت البناء.
+- توثيق خطوات EAS وAPK في `docs/MOBILE_BUILD.md`.
 
-## ما اختُبر فعليًا (في بيئتي) ونتائجه
+## ما تم التحقق منه
 
-| الاختبار | النتيجة |
-|---|---|
-| اختبارات الـAPI (`npm test` في `apps/api`) | 13 من 13 نجحت |
-| اختبارات التصميم: تباين الألوان WCAG AA (`packages/design`) | 16 من 16 نجحت |
-| تشغيل `npm test` من الجذر | نجح، ويشغّل المجموعتين |
-| تشغيل الخادم الحقيقي واستدعاؤه بـcurl | `/health` رجع 200، و`/assistants` رجع `{"assistants":[]}`، ومسار غير معروف رجع 404 |
-| فحص أنواع TypeScript للـapi والـdesign والـcontract | نجح بلا أخطاء (بإعداد مؤقت يشير إلى تعريفات Node المحلية، وبإصدار TypeScript 6.0.3 الموجود عندي) |
-| `npm run check` (JSON، حقول EAS، الوثائق، فحص المفاتيح) | 51 فحصًا نجحت، ويُشغَّل عندك أيضًا |
+- المستخدم فتح `/health` وأكد JSON بحالة `ok`.
+- المستخدم فتح `/assistants` وأكد ظهور VRRON General.
+- GitHub Actions نجحت على تعديل ربط شاشة المحادثة commit `e741dbf`.
+- فحوصات GitHub Actions الأحدث تشمل `npm run check` و`npm test` وTypeScript typecheck للـmobile والـworkspaces.
 
-## ما لم يُختبر بعد (يحتاج تشغيلًا منك)
+## لم يُثبت بعد
 
-- **تطبيق Expo بالكامل**: لم يُثبَّت ولم يُشغَّل ولم تُفحص أنواعه. بيئتي بلا إنترنت، فلا أستطيع تثبيت Expo أو React Native.
-- أسماء استيراد الخط من `@expo-google-fonts/ibm-plex-sans-arabic` كُتبت وفق النمط المعتاد للحزمة ولم تُتحقق.
-- `npx expo-doctor` و`npm run typecheck` بعد تثبيت التبعيات.
-- بناء APK عبر EAS، وتثبيته، وشكل شاشة التأسيس على هاتف حقيقي (التوهج، الخط، الاتجاه).
-- عمل EAS مع هيكل المونوريبو.
-- `npm install` على Node من Codespaces. اختبرتُ على Node 22.23 فقط.
+- اختبار POST فعلي إلى `/chat` من هاتف المستخدم وتأكيد رد Workers AI.
+- تأكيد نشر آخر نسخة Worker بعد إضافة chat API.
+- ربط EAS بالمشروع، وإخراج APK جديد، وتثبيته على هاتف Android.
+- اختبار تجربة الواجهة والخطوط على جهاز حقيقي.
 
-## ما لم يُنفَّذ عمدًا
+## الخطوة التالية
 
-الشاشات النهائية، المحادثة، الذاكرة، البحث، ربط أي مزود ذكاء اصطناعي، الاستضافة، Dockerfile، الأيقونة وشاشة البداية، أي دمج للمشاريع القديمة.
+اتبع `docs/MOBILE_BUILD.md` لربط EAS وإخراج APK preview ثم اختبر رسالة حقيقية في تبويب المحادثات.
 
-## ملاحظات
+## تنبيه
 
-- لا يوجد `package-lock.json` لأنه لا يمكن توليده بدون إنترنت. يُولَّد عند أول `npm install` عندك، ويجب رفعه.
-- إصدارات Expo وReact وReact Native غير مثبّتة يدويًا عمدًا، وتُحدَّد بأمر `expo install` (راجع `docs/EXTERNAL_SETUP.md`).
+نجاح GitHub Actions يثبت الفحوصات الآلية، وليس وحده إثباتًا أن Worker AI أو APK يعملان على الهاتف. لا توجد مفاتيح API داخل تطبيق الهاتف.
