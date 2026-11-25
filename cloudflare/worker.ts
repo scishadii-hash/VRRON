@@ -14,7 +14,10 @@ function json(body: unknown, status = 200, extra: Record<string, string> = {}) {
 export default {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
-    const path = url.pathname.length > 1 ? url.pathname.replace(/\\/+$/, "") : url.pathname;
+    let path = url.pathname;
+    while (path.length > 1 && path.endsWith("/")) {
+      path = path.slice(0, -1);
+    }
 
     if (path !== "/health" && path !== "/assistants") {
       return json({ error: { code: "not_found", message: "Route not found." } }, 404);
