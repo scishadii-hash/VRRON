@@ -5,7 +5,7 @@ import { createRegistry } from "./core/registry.ts";
 import { VERSION } from "./core/version.ts";
 
 const port = Number(process.env.PORT ?? 3000);
-const host = process.env.HOST ?? "127.0.0.1";
+const host = process.env.HOST ?? "0.0.0.0";
 
 const assistantsDir = fileURLToPath(new URL("./assistants", import.meta.url));
 const { configs, issues } = await loadAssistants(assistantsDir);
