@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   I18nManager,
   Pressable,
@@ -21,6 +21,15 @@ import {
 import { GlowOrb } from "../components/GlowOrb";
 
 type Tab = "home" | "chats" | "settings";
+
+type AssistantSummary = {
+  id: string;
+  name: { ar: string; en: string };
+  description: { ar: string; en: string };
+  accent: "violet" | "blue";
+};
+
+type RegistryStatus = "loading" | "unconfigured" | "ready" | "error";
 
 type Props = {
   fontsReady: boolean;
@@ -50,6 +59,33 @@ function TextLabel({
 
 export function MainScreen({ fontsReady }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("home");
+  const [assistants, setAssistants] = useState<AssistantSummary[]>([]);
+  const [registryStatus, setRegistryStatus] = useState<RegistryStatus>("loading");
+  const apiBase = (process.env.EXPO_PUBLIC_VRRON_API_URL ?? "").trim().replace(/\\/$/, "");
+
+  useEffect(() => {
+    if (!apiBase) {
+      setRegistryStatus("unconfigured");
+      return;
+    }
+    const controller = new AbortController();
+    setRegistryStatus("loading");
+    fetch(apiBase + "/assistants", { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error("Core request failed: " + response.status);
+        return response.json() as Promise<{ assistants?: AssistantSummary[] }>;
+      })
+      .then((payload) => {
+        if (!Array.isArray(payload.assistants)) throw new Error("Invalid registry response");
+        setAssistants(payload.assistants);
+        setRegistryStatus("ready");
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setRegistryStatus("error");
+      });
+    return () => controller.abort();
+  }, [apiBase]);
   const isRtl = I18nManager.isRTL;
 
   return (
@@ -148,10 +184,12 @@ export function MainScreen({ fontsReady }: Props) {
               </View>
               <TextLabel fontsReady={fontsReady} style={styles.sectionTitle}>مساعدوك</TextLabel>
               <View style={styles.registryCard}>
-                <View style={styles.registryOrb}><GlowOrb size={82} rgb={glowRgb.blue} peakAlpha={0.28} /><Text style={styles.registrySymbol}>⌘</Text></View>
-                <TextLabel fontsReady={fontsReady} style={styles.registryTitle}>لا يوجد مساعدون متاحون حاليًا</TextLabel>
-                <TextLabel fontsReady={fontsReady} style={styles.registryBody}>لم يتم تفعيل أي مساعد في الـAssistant Registry بعد. عند تسجيل مساعد فعلي، سيظهر هنا ويمكنك بدء محادثة معه.</TextLabel>
-                <View style={styles.phaseTag}><TextLabel fontsReady={fontsReady} style={styles.phaseTagText}>Assistant Registry · جاهز للربط</TextLabel></View>
+                {registryStatus === "loading" && <TextLabel fontsReady={fontsReady} style={styles.registryBody}>جارٍ تحميل قائمة المساعدين من VRRON Core…</TextLabel>}
+                {registryStatus === "unconfigured" && <><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>الـCore غير متصل بعد</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>قائمة المساعدين ستظهر بعد نشر الـCore وضبط عنوان API العام في إعدادات البناء.</TextLabel></>}
+                {registryStatus === "error" && <><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>تعذّر الاتصال بالـCore</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>تحقق من عنوان API واتصال الخدمة، ثم أعد فتح التطبيق.</TextLabel></>}
+                {registryStatus === "ready" && assistants.length === 0 && <><View style={styles.registryOrb}><GlowOrb size={82} rgb={glowRgb.blue} peakAlpha={0.28} /><Text style={styles.registrySymbol}>⌘</Text></View><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>لا يوجد مساعدون مفعّلون</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>وصل التطبيق بالـCore بنجاح، لكن الـAssistant Registry لا يحتوي حاليًا على مساعد مفعّل.</TextLabel></>}
+                {registryStatus === "ready" && assistants.map((assistant) => <View key={assistant.id} style={styles.assistantRow}><View style={[styles.assistantBadge, assistant.accent === "blue" && styles.assistantBadgeBlue]}><Text style={styles.assistantBadgeSymbol}>✦</Text></View><View style={styles.infoText}><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>{assistant.name.ar || assistant.name.en}</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>{assistant.description.ar || assistant.description.en}</TextLabel></View></View>)}
+                <View style={styles.phaseTag}><TextLabel fontsReady={fontsReady} style={styles.phaseTagText}>Assistant Registry · Core API</TextLabel></View>
               </View>
               <View style={styles.composerPreview}>
                 <TextLabel fontsReady={fontsReady} style={styles.composerHint}>اكتب رسالتك بعد اختيار المساعد</TextLabel>
@@ -345,7 +383,11 @@ const styles = StyleSheet.create({
   chatPage: { gap: spacing.lg, paddingBottom: spacing.lg },
   assistantIntro: { flexDirection: "row", alignItems: "center", gap: spacing.md, padding: spacing.md, backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
   assistantIntroIcon: { width: 40, height: 40, borderRadius: radius.md, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(124, 58, 237, 0.16)" },
-  registryCard: { alignItems: "center", padding: spacing.lg, gap: spacing.md, backgroundColor: colors.surfaceRaised, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border },
+  registryCard: { alignItems: "stretch", padding: spacing.lg, gap: spacing.md, backgroundColor: colors.surfaceRaised, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border },
+  assistantRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingVertical: spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+  assistantBadge: { width: 42, height: 42, borderRadius: radius.md, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(124, 58, 237, 0.18)" },
+  assistantBadgeBlue: { backgroundColor: "rgba(59, 130, 246, 0.18)" },
+  assistantBadgeSymbol: { color: colors.violetLight, fontSize: 22 },
   registryOrb: { width: 82, height: 82, alignItems: "center", justifyContent: "center" },
   registrySymbol: { position: "absolute", color: colors.blueLight, fontSize: 30 },
   registryTitle: { color: colors.textPrimary, fontSize: fontSize.body, fontFamily: fontFamily.semiBold, textAlign: "center" },
