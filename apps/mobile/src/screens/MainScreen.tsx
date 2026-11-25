@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextStyle,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -37,7 +38,7 @@ function TextLabel({
   fontsReady,
 }: {
   children: string;
-  style?: object;
+  style?: TextStyle;
   fontsReady: boolean;
 }) {
   return (
