@@ -1,0 +1,32 @@
+name: Unpack VRRON Phase 1.1
+on:
+  push:
+    paths:
+      - "vrron-phase-1.1.zip"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  unpack:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'Upload VRRON Phase 1.1 ZIP')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Validate and unpack archive
+        run: |
+          test -f vrron-phase-1.1.zip
+          if unzip -Z1 vrron-phase-1.1.zip | grep -E '(^/|(^|/)\.\.(\/|$))'; then
+            echo "Unsafe archive path detected"
+            exit 1
+          fi
+          unzip -o vrron-phase-1.1.zip -d .
+          rm vrron-phase-1.1.zip
+      - name: Commit extracted project files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Extract VRRON Phase 1.1 project files" || echo "No changes to commit"
+          git push
