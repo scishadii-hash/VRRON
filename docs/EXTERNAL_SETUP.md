@@ -78,6 +78,15 @@ curl http://127.0.0.1:3000/health
 curl http://127.0.0.1:3000/assistants
 ```
 
-## ملاحظة مهمة عن Codespaces
 
-لا يلزم أن تكون داخل Codespace لفتح المستودع أو تنفيذ خطوات Render/Expo من المتصفح. لكن أوامر `npm` و`eas` تحتاج بيئة Terminal متاحة؛ صفحة GitHub العادية على الهاتف لا تشغّل الأوامر بنفسها.
+## نشر مجاني على Cloudflare Workers (بدون بطاقة)
+
+أُضيف Adapter أولي في `cloudflare/worker.ts` وإعداد `cloudflare/wrangler.jsonc`.
+
+1. افتح [Cloudflare Dashboard](https://dash.cloudflare.com/) ثم **Workers & Pages → Create application → Connect to Git / Import a repository**.
+2. اربط GitHub واسمح لتطبيق Cloudflare بالوصول إلى مستودع `scishadii-hash/VRRON`.
+3. اختر المستودع والفرع `main`، وحدد **Root directory** = `cloudflare`.
+4. اترك Build command فارغًا، واجعل Deploy command `npx wrangler deploy`، ثم **Save and Deploy**.
+5. بعد نجاح النشر، افتح رابط `workers.dev` واختبر `/health`.
+
+الـWorker الحالي يوفّر فقط `GET /health` و`GET /assistants` (قائمة فارغة). إعدادات المساعدين الحالية تعتمد على Node filesystem، لذلك لم يتم نقلها بعد إلى Workers؛ لا توجد محادثة AI جاهزة حتى الآن. بعد ظهور رابط Worker نربطه بمتغير Expo `EXPO_PUBLIC_VRRON_API_URL` ونعيد بناء APK.
