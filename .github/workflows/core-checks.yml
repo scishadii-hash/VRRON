@@ -30,8 +30,9 @@ jobs:
       - name: Run API and design tests
         run: npm test
 
-      - name: Type-check API, contract, and design packages
+      - name: Type-check workspace packages and mobile app
         run: |
           npm run typecheck --workspace=@vrron/api
           npm run typecheck --workspace=@vrron/contract
           npm run typecheck --workspace=@vrron/design
+          npm run typecheck --workspace=@vrron/mobile
