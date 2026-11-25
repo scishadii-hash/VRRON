@@ -136,21 +136,29 @@ export function MainScreen({ fontsReady }: Props) {
           )}
 
           {activeTab === "chats" && (
-            <View style={styles.emptyState}>
-              <View style={styles.emptyOrb}>
-                <GlowOrb size={150} rgb={glowRgb.blue} peakAlpha={0.3} />
-                <Text style={styles.emptySymbol}>✧</Text>
+            <View style={styles.chatPage}>
+              <TextLabel fontsReady={fontsReady} style={styles.pageTitle}>مساحة المحادثات</TextLabel>
+              <TextLabel fontsReady={fontsReady} style={styles.pageSubtitle}>اختار المساعد المناسب لمهمتك</TextLabel>
+              <View style={styles.assistantIntro}>
+                <View style={styles.assistantIntroIcon}><Text style={styles.infoIconText}>✦</Text></View>
+                <View style={styles.infoText}>
+                  <TextLabel fontsReady={fontsReady} style={styles.infoTitle}>منظومة VRRON</TextLabel>
+                  <TextLabel fontsReady={fontsReady} style={styles.infoBody}>الواجهة جاهزة، ويتم تجهيز ربط قائمة المساعدين بالـCore.</TextLabel>
+                </View>
               </View>
-              <TextLabel fontsReady={fontsReady} style={styles.headlineSmall}>
-                محادثاتك تبدأ هنا
-              </TextLabel>
-              <TextLabel fontsReady={fontsReady} style={styles.emptyDescription}>
-                لم تبدأ أي محادثة بعد. واجهة المحادثة واختيار المساعد قادمان في المرحلة التالية.
-              </TextLabel>
-              <View style={styles.phaseTag}>
-                <TextLabel fontsReady={fontsReady} style={styles.phaseTagText}>
-                  المرحلة 1.3 · قريبًا
-                </TextLabel>
+              <TextLabel fontsReady={fontsReady} style={styles.sectionTitle}>مساعدوك</TextLabel>
+              <View style={styles.registryCard}>
+                <View style={styles.registryOrb}><GlowOrb size={82} rgb={glowRgb.blue} peakAlpha={0.28} /><Text style={styles.registrySymbol}>⌘</Text></View>
+                <TextLabel fontsReady={fontsReady} style={styles.registryTitle}>لا يوجد مساعدون متاحون حاليًا</TextLabel>
+                <TextLabel fontsReady={fontsReady} style={styles.registryBody}>لم يتم تفعيل أي مساعد في الـAssistant Registry بعد. عند تسجيل مساعد فعلي، سيظهر هنا ويمكنك بدء محادثة معه.</TextLabel>
+                <View style={styles.phaseTag}><TextLabel fontsReady={fontsReady} style={styles.phaseTagText}>Assistant Registry · جاهز للربط</TextLabel></View>
+              </View>
+              <View style={styles.composerPreview}>
+                <TextLabel fontsReady={fontsReady} style={styles.composerHint}>اكتب رسالتك بعد اختيار المساعد</TextLabel>
+                <View style={styles.composerDisabled}>
+                  <TextLabel fontsReady={fontsReady} style={styles.composerPlaceholder}>المحادثة غير مفعّلة في هذه المرحلة</TextLabel>
+                  <View style={styles.sendDisabled}><Text style={styles.sendSymbol}>↑</Text></View>
+                </View>
               </View>
             </View>
           )}
@@ -334,6 +342,20 @@ const styles = StyleSheet.create({
   infoText: { flex: 1, gap: 4 },
   infoTitle: { color: colors.textPrimary, fontSize: fontSize.body, fontFamily: fontFamily.semiBold },
   infoBody: { color: colors.textSecondary, fontSize: fontSize.caption + 1, lineHeight: lineHeight.body - 3 },
+  chatPage: { gap: spacing.lg, paddingBottom: spacing.lg },
+  assistantIntro: { flexDirection: "row", alignItems: "center", gap: spacing.md, padding: spacing.md, backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
+  assistantIntroIcon: { width: 40, height: 40, borderRadius: radius.md, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(124, 58, 237, 0.16)" },
+  registryCard: { alignItems: "center", padding: spacing.lg, gap: spacing.md, backgroundColor: colors.surfaceRaised, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border },
+  registryOrb: { width: 82, height: 82, alignItems: "center", justifyContent: "center" },
+  registrySymbol: { position: "absolute", color: colors.blueLight, fontSize: 30 },
+  registryTitle: { color: colors.textPrimary, fontSize: fontSize.body, fontFamily: fontFamily.semiBold, textAlign: "center" },
+  registryBody: { color: colors.textSecondary, fontSize: fontSize.caption + 1, lineHeight: lineHeight.body, textAlign: "center" },
+  composerPreview: { gap: spacing.sm, marginTop: spacing.md },
+  composerHint: { color: colors.textMuted, fontSize: fontSize.caption },
+  composerDisabled: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md, padding: spacing.md, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, backgroundColor: colors.surface },
+  composerPlaceholder: { flex: 1, color: colors.textMuted, fontSize: fontSize.caption },
+  sendDisabled: { width: 34, height: 34, borderRadius: radius.md, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceRaised },
+  sendSymbol: { color: colors.textMuted, fontSize: 22 },
   emptyState: { flex: 1, minHeight: 430, alignItems: "center", justifyContent: "center", paddingHorizontal: spacing.lg, gap: spacing.lg },
   emptyOrb: { width: 150, height: 150, alignItems: "center", justifyContent: "center" },
   emptySymbol: { position: "absolute", color: colors.blueLight, fontSize: 44 },
