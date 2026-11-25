@@ -15,7 +15,9 @@
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "api:start": "npm run start -w @vrron/api",
-    "mobile:start": "npm run start -w @vrron/mobile"
+    "mobile:start": "npm run start -w @vrron/mobile",
+    "build:android:preview": "npm exec --yes eas-cli@latest -- build --platform android --profile preview",
+    "build:android:status": "npm exec --yes eas-cli@latest -- build:list --platform android --limit 5"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
