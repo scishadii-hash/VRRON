@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
   chatInput: { flex: 1, minHeight: 44, maxHeight: 110, color: colors.textPrimary, fontSize: fontSize.body, paddingVertical: spacing.sm },
   sendButton: { width: 40, height: 40, borderRadius: radius.md, alignItems: "center", justifyContent: "center", backgroundColor: colors.violet },
   sendButtonDisabled: { opacity: 0.4 },
-  composerPreview: { gap: spacing.sm, marginTop: spacing.md },
+  composerPreview: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.md, paddingHorizontal: spacing.md, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, backgroundColor: colors.surface },
   composerHint: { color: colors.textMuted, fontSize: fontSize.caption },
   composerDisabled: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md, padding: spacing.md, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, backgroundColor: colors.surface },
   composerPlaceholder: { flex: 1, color: colors.textMuted, fontSize: fontSize.caption },
