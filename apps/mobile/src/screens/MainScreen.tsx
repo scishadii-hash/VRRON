@@ -196,7 +196,7 @@ export function MainScreen({ fontsReady }: Props) {
                 </Text>
                 <TextLabel
                   fontsReady={fontsReady}
-                  style={[styles.tabLabel, selected ? styles.tabLabelSelected : undefined]}
+                  style={{ ...styles.tabLabel, ...(selected ? styles.tabLabelSelected : {}) }}
                 >
                   {tab.label}
                 </TextLabel>
