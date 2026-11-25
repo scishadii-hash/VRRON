@@ -9,7 +9,7 @@ import {
 } from "@expo-google-fonts/ibm-plex-sans-arabic";
 import { colors } from "@vrron/design";
 import { enableRtlSupport } from "./src/i18n/rtl";
-import { FoundationScreen } from "./src/screens/FoundationScreen";
+import { MainScreen } from "./src/screens/MainScreen";
 
 enableRtlSupport();
 
@@ -28,7 +28,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
-      <FoundationScreen fontsReady={fontsLoaded} />
+      <MainScreen fontsReady={fontsLoaded} />
     </SafeAreaProvider>
   );
 }
