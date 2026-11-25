@@ -1,125 +1,83 @@
-# EXTERNAL_SETUP
+# VRRON — تشغيل وربط المشروع من الهاتف
 
-كل الخطوات مصممة للعمل من الهاتف فقط، عبر GitHub Codespaces (بيئة تطوير داخل المتصفح). يُفضّل فتح GitHub بوضع "Desktop site" في متصفح الهاتف.
+المستودع: [scishadii-hash/VRRON](https://github.com/scishadii-hash/VRRON)
+الفرع الأساسي: `main`
 
-## الحسابات المطلوبة
+## الحالة الحالية
 
-| الحساب | الاستخدام | ملاحظة |
-|---|---|---|
-| GitHub | المستودع وCodespaces | الحصة المجانية الشهرية لـCodespaces محدودة وقد تتغير. راجع الصفحة الرسمية قبل الاعتماد عليها. |
-| Expo (expo.dev) | EAS Build | الخطة المجانية تحدد عدد البنيات الشهرية وقد تُبطئ الطابور. راجع expo.dev/pricing. |
-| Google Play Console | نشر AAB على Google Play | غير مطلوب الآن. رسوم تسجيل لمرة واحدة. |
+- واجهة Expo الأساسية موجودة، والـCore API والـAssistant Registry موجودان.
+- فحوصات GitHub Actions ناجحة على آخر تحديث.
+- الـAPI يدعم حاليًا `GET /health` و`GET /assistants`.
+- لا توجد محادثة فعلية أو مساعدون مفعّلون بعد؛ لا تعتبر الواجهة الحالية بوتًا مكتملًا.
+- ملف `render.yaml` جاهز، لكن إنشاء خدمة Render وربطها بحسابك يحتاج موافقتك داخل لوحة Render.
 
-لا يلزم أي مفتاح API أو خدمة مدفوعة في المرحلة 1.1.
+## 1) نشر VRRON Core على Render
 
-## 1. إنشاء المستودع
+1. افتح [Render](https://render.com/) وسجّل الدخول باستخدام GitHub.
+2. اختر **New → Blueprint**.
+3. اربط المستودع `scishadii-hash/VRRON`، والفرع `main`.
+4. Render سيقرأ `render.yaml` ويعرض خدمة `vrron-core`. اضغط **Apply**.
+5. انتظر حتى يصبح النشر Live، ثم انسخ رابط الخدمة العام، مثل `https://your-service.onrender.com`.
 
-1. في GitHub: New repository.
-2. الاسم: `VRRON`. يُفضّل Private.
-3. لا تُفعّل Add README ولا .gitignore ولا license.
+اختبر الرابط من متصفح الهاتف:
+- `https://YOUR-SERVICE.onrender.com/health` — يجب أن يرجع JSON بحالة `ok`.
+- `https://YOUR-SERVICE.onrender.com/assistants` — حاليًا متوقع قائمة فارغة، لأن مفيش مساعد مفعّل.
 
-## 2. رفع ملف ZIP
+> لا تضع رابطًا تجريبيًا أو اسمًا متوقعًا في التطبيق. استخدم رابط Render الحقيقي الذي يظهر بعد النشر.
 
-1. افتح المستودع الفارغ ← Add file ← Upload files.
-2. اختر `vrron-phase-1.1.zip` واضغط Commit changes.
+## 2) ربط تطبيق Expo بالـCore
 
-صفحة الرفع على الهاتف ترفع الملف كما هو ولا تفك الضغط، لذلك نفكّه في الخطوة التالية.
+من [Expo Dashboard](https://expo.dev/):
 
-## 3. فتح Codespace وفك الملفات
+1. افتح مشروع Expo المرتبط بحسابك.
+2. ادخل **Environment variables**.
+3. أضف للبيئة `preview`:
+   - **Name:** `EXPO_PUBLIC_VRRON_API_URL`
+   - **Value:** رابط Render الأساسي فقط، من غير `/health` أو `/assistants` ومن غير slash في النهاية.
+4. احفظ المتغير، ثم أعد بناء APK بملف تعريف `preview`.
 
-1. من صفحة المستودع: Code ← Codespaces ← Create codespace on main.
-2. في الـTerminal:
+قيمة `EXPO_PUBLIC_...` تُضمّن داخل التطبيق وقت البناء؛ لذلك الـAPK القديم لن يتصل بالخدمة بعد إضافة المتغير.
+
+## 3) بناء APK (بعد تجهيز مشروع EAS)
+
+إذا كان مشروع Expo قد تم ربطه بالفعل بحسابك:
 
 ```bash
-unzip -o vrron-phase-1.1.zip
-git rm -f vrron-phase-1.1.zip
-git add -A
-git commit -m "Phase 1.1: VRRON foundation"
-git push
+npm install
+cd apps/mobile
+eas build -p android --profile preview
 ```
 
-ملفات الـZIP تُفك مباشرة في جذر المستودع بدون مجلد وسيط.
+إذا طلب EAS تسجيل الدخول:
+```bash
+eas login
+```
 
-## 4. التحقق من الـAPI والاختبارات
+لو لم يتم ربط المشروع بـEAS بعد، شغّل `eas init` مرة واحدة من مجلد `apps/mobile`، ثم احفظ التعديل الذي ينشئه في `app.json` وارفعه إلى GitHub قبل البناء.
+
+## 4) تشغيل الفحوصات في بيئة تطوير
+
+المشروع يتطلب Node.js إصدار `22.18` أو أحدث:
 
 ```bash
-node -v                 # يجب أن يكون v22.18 أو أعلى
 npm install
 npm run check
 npm test
+npm run typecheck
+```
+
+لتشغيل الـCore محليًا:
+
+```bash
 npm run api:start
 ```
 
-إذا كان إصدار Node أقدم: `nvm install 22 && nvm use 22`.
-
-في Terminal ثانٍ:
-
+ثم اختبر:
 ```bash
 curl http://127.0.0.1:3000/health
 curl http://127.0.0.1:3000/assistants
 ```
 
-المتوقع: `/health` يرد بـ`status: ok`، و`/assistants` يرد بقائمة فارغة.
+## ملاحظة مهمة عن Codespaces
 
-## 5. تثبيت تبعيات تطبيق Expo (مرة واحدة)
-
-لم نثبّت إصدارات Expo يدويًا حتى لا نخمّنها. الأمر الرسمي `expo install` يختار الإصدارات المتوافقة مع بعضها:
-
-```bash
-cd apps/mobile
-npm install expo@latest
-npx expo install react react-native expo-status-bar expo-font react-native-safe-area-context @expo-google-fonts/ibm-plex-sans-arabic
-npm install -D @types/react
-npx expo install --fix
-npx expo-doctor
-cd ../..
-npm run typecheck
-```
-
-ثم ارفع التغييرات، ومنها `package-lock.json` (مطلوب لبناء EAS):
-
-```bash
-git add -A
-git commit -m "Install Expo dependencies"
-git push
-```
-
-## 6. بناء APK بـEAS
-
-```bash
-npm install -g eas-cli
-eas login
-cd apps/mobile
-eas init
-eas build -p android --profile preview
-```
-
-- `eas init` ينشئ المشروع على expo.dev ويكتب `projectId` في `app.json`. ارفع هذا التعديل بعد ذلك.
-- عند السؤال عن Keystore اختر أن يولّده EAS.
-- عند انتهاء البناء يظهر رابط. افتحه من هاتفك، نزّل الـAPK، وفعّل "التثبيت من مصادر غير معروفة" عند الطلب.
-- اسم الحزمة الحالي `com.vrron.app` (في `apps/mobile/app.json`). غيّره قبل أول بناء إذا أردت اسمًا آخر، لأنه لا يتغير بعد النشر على Google Play.
-
-لإخراج AAB لاحقًا: `eas build -p android --profile production`.
-
-## 7. إذا فشل شيء
-
-انسخ آخر 30 سطرًا من الخطأ (أو رابط سجل البناء على expo.dev) وأرسلها. المتوقع أن أول بناء قد يحتاج تعديلًا صغيرًا لأن إعداد المونوريبو مع EAS لم يُختبر بعد.
-
-## نشر VRRON Core على Render
-
-تم تجهيز `render.yaml` في جذر المستودع، والسيرفر يستمع على `0.0.0.0` ويستخدم متغير `PORT` الذي توفره منصة الاستضافة.
-
-1. افتح [Render](https://render.com/) وسجّل الدخول بحساب GitHub المرتبط بالمستودع.
-2. من لوحة Render اختر **New → Blueprint**، ثم اختر المستودع `scishadii-hash/VRRON` والفرع `main`.
-3. راجع الخدمة المكتشفة باسم `vrron-core` من ملف `render.yaml`، ثم اضغط **Apply** لإنشاء ونشر الخدمة.
-4. بعد انتهاء النشر، افتح صفحة الخدمة وانسخ رابطها العام `https://...onrender.com`.
-5. اختبر من المتصفح بإضافة `/health` إلى الرابط. يجب أن ترى JSON يحتوي `status: "ok"`، ثم اختبر `/assistants`.
-
-### ربط تطبيق الهاتف بعنوان الـCore
-
-في [Expo Dashboard](https://expo.dev/)، افتح مشروع VRRON ثم **Environment variables**، وأضف المتغير التالي لبيئة `preview`:
-
-- Name: `EXPO_PUBLIC_VRRON_API_URL`
-- Value: رابط خدمة Render العام فقط، دون `/assistants` أو `/health`، ودون slash في النهاية.
-
-بعد حفظ المتغير، أعد بناء APK من مشروع Expo باستخدام ملف `apps/mobile/eas.json` وملف تعريف `preview`. قيمة `EXPO_PUBLIC_...` تُضمّن وقت البناء؛ لذلك لن يتصل APK القديم بالخدمة تلقائيًا.
+لا يلزم أن تكون داخل Codespace لفتح المستودع أو تنفيذ خطوات Render/Expo من المتصفح. لكن أوامر `npm` و`eas` تحتاج بيئة Terminal متاحة؛ صفحة GitHub العادية على الهاتف لا تشغّل الأوامر بنفسها.
