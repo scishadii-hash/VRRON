@@ -83,7 +83,7 @@ export function MainScreen({ fontsReady }: Props) {
                   عالمك، بإمكانات أوسع
                 </TextLabel>
                 <TextLabel fontsReady={fontsReady} style={styles.headline}>
-                  ذكاء واحد.{ "\n" }رؤى بلا حدود.
+                  {"ذكاء واحد.\nرؤى بلا حدود."}
                 </TextLabel>
                 <TextLabel fontsReady={fontsReady} style={styles.heroDescription}>
                   مساحة تجمع مساعديك الذكيين في تجربة واحدة، مصممة حولك.
