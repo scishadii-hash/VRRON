@@ -67,7 +67,7 @@ export function MainScreen({ fontsReady }: Props) {
   const [chatInput, setChatInput] = useState("");
   const [chatBusy, setChatBusy] = useState(false);
   const [chatError, setChatError] = useState("");
-  const apiBase = (process.env.EXPO_PUBLIC_VRRON_API_URL ?? "").trim().replace(/\/$/, "");
+  const apiBase = (process.env.EXPO_PUBLIC_VRRON_API_URL ?? "https://vrron.sci-shadii.workers.dev").trim().replace(/\/$/, "");
 
   useEffect(() => {
     if (!apiBase) {
@@ -173,7 +173,7 @@ export function MainScreen({ fontsReady }: Props) {
                   ابدأ رحلتك مع VRRON
                 </TextLabel>
                 <TextLabel fontsReady={fontsReady} style={styles.cardDescription}>
-                  واجهة المحادثات قيد التجهيز. قريبًا ستجد مساعديك هنا.
+                  ابدأ محادثة مباشرة مع مساعد VRRON العام.
                 </TextLabel>
               </Pressable>
 
@@ -209,15 +209,15 @@ export function MainScreen({ fontsReady }: Props) {
                 <View style={styles.assistantIntroIcon}><Text style={styles.infoIconText}>✦</Text></View>
                 <View style={styles.infoText}>
                   <TextLabel fontsReady={fontsReady} style={styles.infoTitle}>منظومة VRRON</TextLabel>
-                  <TextLabel fontsReady={fontsReady} style={styles.infoBody}>الواجهة جاهزة، ويتم تجهيز ربط قائمة المساعدين بالـCore.</TextLabel>
+                  <TextLabel fontsReady={fontsReady} style={styles.infoBody}>المحادثة متصلة بـVRRON Core عبر Workers AI.</TextLabel>
                 </View>
               </View>
               <TextLabel fontsReady={fontsReady} style={styles.sectionTitle}>مساعدوك</TextLabel>
               <View style={styles.registryCard}>
                 {registryStatus === "loading" && <TextLabel fontsReady={fontsReady} style={styles.registryBody}>جارٍ تحميل قائمة المساعدين من VRRON Core…</TextLabel>}
-                {registryStatus === "unconfigured" && <><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>الـCore غير متصل بعد</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>قائمة المساعدين ستظهر بعد نشر الـCore وضبط عنوان API العام في إعدادات البناء.</TextLabel></>}
+                {registryStatus === "unconfigured" && <><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>الـCore غير متصل بعد</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>اضبط EXPO_PUBLIC_VRRON_API_URL إذا كنت تستخدم عنوان Core مختلفًا.</TextLabel></>}
                 {registryStatus === "error" && <><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>تعذّر الاتصال بالـCore</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>تحقق من عنوان API واتصال الخدمة، ثم أعد فتح التطبيق.</TextLabel></>}
-                {registryStatus === "ready" && assistants.length === 0 && <><View style={styles.registryOrb}><GlowOrb size={82} rgb={glowRgb.blue} peakAlpha={0.28} /><Text style={styles.registrySymbol}>⌘</Text></View><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>لا يوجد مساعدون مفعّلون</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>وصل التطبيق بالـCore بنجاح، لكن الـAssistant Registry لا يحتوي حاليًا على مساعد مفعّل.</TextLabel></>}
+                {registryStatus === "ready" && assistants.length === 0 && <><View style={styles.registryOrb}><GlowOrb size={82} rgb={glowRgb.blue} peakAlpha={0.28} /><Text style={styles.registrySymbol}>⌘</Text></View><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>لا يوجد مساعدون مفعّلون</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>اتصل التطبيق بالـCore، لكن لا يوجد مساعد مفعّل حاليًا.</TextLabel></>}
                 {registryStatus === "ready" && assistants.map((assistant) => <View key={assistant.id} style={styles.assistantRow}><View style={[styles.assistantBadge, assistant.accent === "blue" && styles.assistantBadgeBlue]}><Text style={styles.assistantBadgeSymbol}>✦</Text></View><View style={styles.infoText}><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>{assistant.name.ar || assistant.name.en}</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>{assistant.description.ar || assistant.description.en}</TextLabel></View></View>)}
                 <View style={styles.phaseTag}><TextLabel fontsReady={fontsReady} style={styles.phaseTagText}>Assistant Registry · Core API</TextLabel></View>
               </View>
