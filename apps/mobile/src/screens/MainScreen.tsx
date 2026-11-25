@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TextStyle,
   View,
 } from "react-native";
@@ -30,6 +31,7 @@ type AssistantSummary = {
 };
 
 type RegistryStatus = "loading" | "unconfigured" | "ready" | "error";
+type ChatMessage = { role: "user" | "assistant"; content: string };
 
 type Props = {
   fontsReady: boolean;
@@ -61,6 +63,10 @@ export function MainScreen({ fontsReady }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [assistants, setAssistants] = useState<AssistantSummary[]>([]);
   const [registryStatus, setRegistryStatus] = useState<RegistryStatus>("loading");
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatBusy, setChatBusy] = useState(false);
+  const [chatError, setChatError] = useState("");
   const apiBase = (process.env.EXPO_PUBLIC_VRRON_API_URL ?? "").trim().replace(/\/$/, "");
 
   useEffect(() => {
@@ -86,6 +92,30 @@ export function MainScreen({ fontsReady }: Props) {
       });
     return () => controller.abort();
   }, [apiBase]);
+  async function sendChatMessage() {
+    const content = chatInput.trim();
+    if (!content || chatBusy || !apiBase) return;
+    const nextMessages: ChatMessage[] = [...chatMessages, { role: "user", content }];
+    setChatMessages(nextMessages);
+    setChatInput("");
+    setChatBusy(true);
+    setChatError("");
+    try {
+      const response = await fetch(apiBase + "/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ assistantId: "general", messages: nextMessages }),
+      });
+      const payload = await response.json() as { reply?: string; error?: string };
+      if (!response.ok || !payload.reply) throw new Error(payload.error || "تعذّر الحصول على رد");
+      setChatMessages((current) => [...current, { role: "assistant", content: payload.reply as string }]);
+    } catch {
+      setChatError("تعذّر إرسال الرسالة. تأكد من نشر تحديث الـCore ثم جرّب مرة أخرى.");
+    } finally {
+      setChatBusy(false);
+    }
+  }
+
   const isRtl = I18nManager.isRTL;
 
   return (
@@ -191,14 +221,16 @@ export function MainScreen({ fontsReady }: Props) {
                 {registryStatus === "ready" && assistants.map((assistant) => <View key={assistant.id} style={styles.assistantRow}><View style={[styles.assistantBadge, assistant.accent === "blue" && styles.assistantBadgeBlue]}><Text style={styles.assistantBadgeSymbol}>✦</Text></View><View style={styles.infoText}><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>{assistant.name.ar || assistant.name.en}</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>{assistant.description.ar || assistant.description.en}</TextLabel></View></View>)}
                 <View style={styles.phaseTag}><TextLabel fontsReady={fontsReady} style={styles.phaseTagText}>Assistant Registry · Core API</TextLabel></View>
               </View>
-              <View style={styles.composerPreview}>
-                <TextLabel fontsReady={fontsReady} style={styles.composerHint}>اكتب رسالتك بعد اختيار المساعد</TextLabel>
-                <View style={styles.composerDisabled}>
-                  <TextLabel fontsReady={fontsReady} style={styles.composerPlaceholder}>المحادثة غير مفعّلة في هذه المرحلة</TextLabel>
-                  <View style={styles.sendDisabled}><Text style={styles.sendSymbol}>↑</Text></View>
-                </View>
+              <View style={styles.conversation}>
+                {chatMessages.length === 0 && <TextLabel fontsReady={fontsReady} style={styles.chatWelcome}>ابدأ محادثتك مع VRRON General</TextLabel>}
+                {chatMessages.map((message, index) => <View key={index} style={[styles.messageBubble, message.role === "user" ? styles.userBubble : styles.assistantBubble]}><TextLabel fontsReady={fontsReady} style={styles.messageText}>{message.content}</TextLabel></View>)}
+                {chatBusy && <TextLabel fontsReady={fontsReady} style={styles.chatLoading}>VRRON يفكر…</TextLabel>}
+                {!!chatError && <TextLabel fontsReady={fontsReady} style={styles.chatError}>{chatError}</TextLabel>}
               </View>
-            </View>
+              <View style={styles.composerPreview}>
+                <TextInput value={chatInput} onChangeText={setChatInput} placeholder="اكتب رسالتك هنا…" placeholderTextColor={colors.textMuted} multiline style={styles.chatInput} editable={!chatBusy} />
+                <Pressable accessibilityRole="button" accessibilityLabel="إرسال الرسالة" onPress={sendChatMessage} disabled={chatBusy || !chatInput.trim() || !apiBase} style={({ pressed }) => [styles.sendButton, (chatBusy || !chatInput.trim() || !apiBase) && styles.sendButtonDisabled, pressed && styles.pressed]}><Text style={styles.sendSymbol}>↑</Text></Pressable>
+              </View>            </View>
           )}
 
           {activeTab === "settings" && (
@@ -392,6 +424,17 @@ const styles = StyleSheet.create({
   registrySymbol: { position: "absolute", color: colors.blueLight, fontSize: 30 },
   registryTitle: { color: colors.textPrimary, fontSize: fontSize.body, fontFamily: fontFamily.semiBold, textAlign: "center" },
   registryBody: { color: colors.textSecondary, fontSize: fontSize.caption + 1, lineHeight: lineHeight.body, textAlign: "center" },
+  conversation: { gap: spacing.md, paddingVertical: spacing.md },
+  chatWelcome: { color: colors.textSecondary, fontSize: fontSize.body, lineHeight: lineHeight.body, textAlign: "center", paddingVertical: spacing.xl },
+  messageBubble: { maxWidth: "92%", padding: spacing.md, borderRadius: radius.md },
+  userBubble: { alignSelf: "flex-end", backgroundColor: "rgba(124, 58, 237, 0.2)", borderColor: "#514078", borderWidth: 1 },
+  assistantBubble: { alignSelf: "flex-start", backgroundColor: colors.surfaceRaised, borderColor: colors.border, borderWidth: 1 },
+  messageText: { color: colors.textPrimary, fontSize: fontSize.body, lineHeight: lineHeight.body },
+  chatLoading: { color: colors.violetLight, fontSize: fontSize.caption },
+  chatError: { color: "#FCA5A5", fontSize: fontSize.caption, lineHeight: lineHeight.body },
+  chatInput: { flex: 1, minHeight: 44, maxHeight: 110, color: colors.textPrimary, fontSize: fontSize.body, paddingVertical: spacing.sm },
+  sendButton: { width: 40, height: 40, borderRadius: radius.md, alignItems: "center", justifyContent: "center", backgroundColor: colors.violet },
+  sendButtonDisabled: { opacity: 0.4 },
   composerPreview: { gap: spacing.sm, marginTop: spacing.md },
   composerHint: { color: colors.textMuted, fontSize: fontSize.caption },
   composerDisabled: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md, padding: spacing.md, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, backgroundColor: colors.surface },
