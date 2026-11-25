@@ -9,6 +9,10 @@
     "backgroundColor": "#07070C",
     "android": {
       "package": "com.vrron.app"
-    }
+    },
+    "plugins": [
+      "expo-status-bar",
+      "expo-font"
+    ]
   }
 }
