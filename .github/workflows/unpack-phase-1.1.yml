@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - "vrron-phase-1.1.zip"
+      - "vrron-phase-1.1-fixed.zip"
   workflow_dispatch:
 permissions:
   contents: write
@@ -15,13 +16,21 @@ jobs:
           ref: main
       - name: Validate and unpack archive
         run: |
-          test -f vrron-phase-1.1.zip
-          if unzip -Z1 vrron-phase-1.1.zip | grep -E '(^/|(^|/)\.\.(\/|$))'; then
+          archive=""
+          if [ -f vrron-phase-1.1-fixed.zip ]; then
+            archive="vrron-phase-1.1-fixed.zip"
+          elif [ -f vrron-phase-1.1.zip ]; then
+            archive="vrron-phase-1.1.zip"
+          else
+            echo "Phase 1.1 ZIP not found"
+            exit 1
+          fi
+          if unzip -Z1 "$archive" | grep -E '(^/|(^|/)\.\.(\/|$))'; then
             echo "Unsafe archive path detected"
             exit 1
           fi
-          unzip -o vrron-phase-1.1.zip -d .
-          rm vrron-phase-1.1.zip
+          unzip -o "$archive" -d .
+          rm "$archive"
       - name: Commit extracted project files
         run: |
           git config user.name "github-actions[bot]"
