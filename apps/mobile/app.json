@@ -13,6 +13,12 @@
     "plugins": [
       "expo-status-bar",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "ddb72740-82cf-4fc0-9328-2d4907df133e"
+      }
+    },
+    "owner": "shady.dev.karf"
   }
 }
