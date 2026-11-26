@@ -258,7 +258,7 @@ export function MainScreen({ fontsReady }: Props) {
   }
 
   const isRtl = I18nManager.isRTL;
-  const favoriteAssistants = assistants.filter((assistant) => favoriteAssistantIds.includes(assistant.id);
+  const favoriteAssistants = assistants.filter((assistant) => favoriteAssistantIds.includes(assistant.id));
   const filteredConversations = [...conversations].sort((a, b) => b.updatedAt - a.updatedAt).filter((conversation) => {
     const query = conversationSearch.trim().toLocaleLowerCase();
     if (!query) return true;
