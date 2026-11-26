@@ -83,6 +83,7 @@ export function MainScreen({ fontsReady }: Props) {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [conversationsReady, setConversationsReady] = useState(false);
   const [showConversationHistory, setShowConversationHistory] = useState(false);
+  const [conversationSearch, setConversationSearch] = useState("");
   const [renamingConversationId, setRenamingConversationId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
   const [chatInput, setChatInput] = useState("");
@@ -257,7 +258,14 @@ export function MainScreen({ fontsReady }: Props) {
   }
 
   const isRtl = I18nManager.isRTL;
-  const favoriteAssistants = assistants.filter((assistant) => favoriteAssistantIds.includes(assistant.id));
+  const favoriteAssistants = assistants.filter((assistant) => favoriteAssistantIds.includes(assistant.id);
+  const filteredConversations = [...conversations].sort((a, b) => b.updatedAt - a.updatedAt).filter((conversation) => {
+    const query = conversationSearch.trim().toLocaleLowerCase();
+    if (!query) return true;
+    const assistant = assistants.find((item) => item.id === conversation.assistantId);
+    return [conversation.title, conversation.assistantId, assistant?.name.ar, assistant?.name.en,
+      ...conversation.messages.map((message) => message.content)].some((value) => value?.toLocaleLowerCase().includes(query));
+  });
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -351,9 +359,11 @@ export function MainScreen({ fontsReady }: Props) {
               </View>
               {showConversationHistory ? (
                 <View style={styles.historyList}>
+                  <TextInput value={conversationSearch} onChangeText={setConversationSearch} placeholder="ابحث في المحادثات أو اسم المساعد…" placeholderTextColor={colors.textMuted} returnKeyType="search" style={styles.historySearch} accessibilityLabel="البحث في سجل المحادثات" />
                   {!conversationsReady && <TextLabel fontsReady={fontsReady} style={styles.registryBody}>بنحمّل سجل المحادثات…</TextLabel>}
                   {conversationsReady && conversations.length === 0 && <TextLabel fontsReady={fontsReady} style={styles.chatWelcome}>لسه مفيش محادثات محفوظة. ابدأ محادثة جديدة وهتظهر هنا.</TextLabel>}
-                  {[...conversations].sort((a, b) => b.updatedAt - a.updatedAt).map((conversation) => {
+                  {conversationsReady && conversations.length > 0 && filteredConversations.length === 0 && <TextLabel fontsReady={fontsReady} style={styles.chatWelcome}>مفيش محادثات مطابقة للبحث ده.</TextLabel>}
+                  {filteredConversations.map((conversation) => {
                     const assistant = assistants.find((item) => item.id === conversation.assistantId);
                     const preview = [...conversation.messages].reverse().find((item) => item.role === "user")?.content ?? "";
                     const isRenaming = renamingConversationId === conversation.id;
@@ -602,6 +612,7 @@ const styles = StyleSheet.create({
   chatTitleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.sm },
   chatHeaderActions: { flexDirection: "row", gap: spacing.xs },
   historyList: { gap: spacing.md },
+  historySearch: { color: colors.textPrimary, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 11, textAlign: "right" },
   historyCard: { padding: spacing.md, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, backgroundColor: colors.surface, gap: spacing.sm },
   historyOpen: { gap: 5 },
   historyTitle: { color: colors.textPrimary, fontSize: fontSize.body, fontFamily: fontFamily.semiBold },
