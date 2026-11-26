@@ -212,6 +212,23 @@ export function MainScreen({ fontsReady }: Props) {
     }
   }
 
+  function clearConversationHistory() {
+    if (conversations.length === 0) {
+      Alert.alert("السجل فاضي", "مفيش محادثات محفوظة للحذف.");
+      return;
+    }
+    Alert.alert("مسح سجل المحادثات", "هتمسح كل المحادثات المحفوظة من الجهاز. العملية دي مش قابلة للتراجع.", [
+      { text: "إلغاء", style: "cancel" },
+      { text: "مسح الكل", style: "destructive", onPress: () => {
+        setConversations([]);
+        setActiveConversationId(null);
+        setChatMessages([]);
+        setChatError("");
+        setRenamingConversationId(null);
+      } },
+    ]);
+  }
+
   function deleteConversation(conversationId: string) {
     Alert.alert("حذف المحادثة", "المحادثة هتتمسح من الجهاز نهائيًا.", [
       { text: "إلغاء", style: "cancel" },
@@ -466,7 +483,7 @@ export function MainScreen({ fontsReady }: Props) {
                   </View>;
                 })}
               </View>
-              <TextLabel fontsReady={fontsReady} style={styles.settingsNote}>المفضّلون وسجل المحادثات محفوظين على الجهاز، من غير حساب أو مزامنة سحابية حاليًا.</TextLabel>
+              <Pressable accessibilityRole="button" onPress={clearConversationHistory} style={[styles.historyAction, styles.clearHistoryButton]}><TextLabel fontsReady={fontsReady} style={styles.historyDeleteText}>مسح سجل المحادثات بالكامل</TextLabel></Pressable>\n              <TextLabel fontsReady={fontsReady} style={styles.settingsNote}>المفضّلون وسجل المحادثات محفوظين على الجهاز، من غير حساب أو مزامنة سحابية حاليًا.</TextLabel>
               <TextLabel fontsReady={fontsReady} style={styles.settingsNote}>
                 تقدر تغيّر المفضّلين في أي وقت، وسجلّك بيظل محفوظ على نفس الجهاز.
               </TextLabel>
@@ -656,7 +673,7 @@ const styles = StyleSheet.create({
   renameInput: { flex: 1, color: colors.textPrimary, borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 7 },
   historyAction: { paddingHorizontal: spacing.sm, paddingVertical: 7, borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm },
   historyActionText: { color: colors.violetLight, fontSize: fontSize.caption },
-  historyDeleteText: { color: "#FCA5A5", fontSize: fontSize.caption },
+  historyDeleteText: { color: "#FCA5A5", fontSize: fontSize.caption },\n  clearHistoryButton: { alignSelf: "flex-start", marginTop: spacing.md },
   clearChatButton: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: 10, paddingVertical: 7 },
   clearChatText: { color: colors.violetLight, fontSize: fontSize.caption },
   chatStarter: { gap: spacing.sm },
