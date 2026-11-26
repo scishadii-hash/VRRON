@@ -58,13 +58,15 @@ function TextLabel({
   children,
   style,
   fontsReady,
+  numberOfLines,
 }: {
   children: ReactNode;
   style?: TextStyle;
   fontsReady: boolean;
+  numberOfLines?: number;
 }) {
   return (
-    <Text style={[fontsReady && { fontFamily: fontFamily.regular }, style]}>
+    <Text numberOfLines={numberOfLines} style={[fontsReady && { fontFamily: fontFamily.regular }, style]}>
       {children}
     </Text>
   );
@@ -340,7 +342,7 @@ export function MainScreen({ fontsReady }: Props) {
                       <Pressable accessibilityRole="button" onPress={() => openConversation(conversation)} style={styles.historyOpen}>
                         <TextLabel fontsReady={fontsReady} style={styles.historyTitle}>{conversation.title}</TextLabel>
                         <TextLabel fontsReady={fontsReady} style={styles.historyMeta}>{assistant?.name.ar || conversation.assistantId} · {conversation.messages.length} رسالة</TextLabel>
-                        {!!preview && <TextLabel fontsReady={fontsReady} style={styles.historyPreview} maxLines={2}>{preview}</TextLabel>}
+                        {!!preview && <TextLabel fontsReady={fontsReady} style={styles.historyPreview} numberOfLines={2}>{preview}</TextLabel>}
                       </Pressable>
                       {isRenaming ? <View style={styles.renameRow}>
                         <TextInput value={renameDraft} onChangeText={setRenameDraft} placeholder="اسم المحادثة" placeholderTextColor={colors.textMuted} style={styles.renameInput} maxLength={54} />
