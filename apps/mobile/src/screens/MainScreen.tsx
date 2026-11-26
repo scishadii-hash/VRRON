@@ -184,12 +184,18 @@ export function MainScreen({ fontsReady }: Props) {
   async function shareConversation(conversation: ChatConversation) {
     const assistant = assistants.find((item) => item.id === conversation.assistantId);
     const transcript = conversation.messages.map((message) =>
-      (message.role === "user" ? "أنت" : assistant?.name.ar || "VRRON") + ":\n" + message.content
-    ).join("\n\n");
+      (message.role === "user" ? "أنت" : assistant?.name.ar || "VRRON") + ":
+" + message.content
+    ).join("
+
+");
     try {
       await Share.share({
         title: conversation.title,
-        message: "VRRON · " + conversation.title + "\nالمساعد: " + (assistant?.name.ar || conversation.assistantId) + "\n\n" + transcript,
+        message: "VRRON · " + conversation.title + "
+المساعد: " + (assistant?.name.ar || conversation.assistantId) + "
+
+" + transcript,
       });
     } catch {
       Alert.alert("تعذّر مشاركة المحادثة", "حاول مرة تانية.");
@@ -206,7 +212,9 @@ export function MainScreen({ fontsReady }: Props) {
 
   async function shareAssistantReply(content: string) {
     try {
-      await Share.share({ title: "رد من VRRON", message: "رد من VRRON\n\n" + content });
+      await Share.share({ title: "رد من VRRON", message: "رد من VRRON
+
+" + content });
     } catch {
       Alert.alert("تعذّرت مشاركة الرد", "حاول مرة تانية.");
     }
@@ -347,7 +355,8 @@ export function MainScreen({ fontsReady }: Props) {
                   عالمك، بإمكانات أوسع
                 </TextLabel>
                 <TextLabel fontsReady={fontsReady} style={styles.headline}>
-                  {"ذكاء واحد.\nرؤى بلا حدود."}
+                  {"ذكاء واحد.
+رؤى بلا حدود."}
                 </TextLabel>
                 <TextLabel fontsReady={fontsReady} style={styles.heroDescription}>
                   مساحة تجمع مساعديك الذكيين في تجربة واحدة، مصممة حولك.
@@ -415,11 +424,13 @@ export function MainScreen({ fontsReady }: Props) {
                   {filteredConversations.map((conversation) => {
                     const assistant = assistants.find((item) => item.id === conversation.assistantId);
                     const preview = [...conversation.messages].reverse().find((item) => item.role === "user")?.content ?? "";
-                    const isRenaming = renamingConversationId === conversation.id;\n                    const updatedLabel = new Date(conversation.updatedAt).toLocaleDateString("ar-EG", { day: "numeric", month: "short" }) + " · " + new Date(conversation.updatedAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
+                    const isRenaming = renamingConversationId === conversation.id;
+                    const updatedLabel = new Date(conversation.updatedAt).toLocaleDateString("ar-EG", { day: "numeric", month: "short" }) + " · " + new Date(conversation.updatedAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
                     return <View key={conversation.id} style={styles.historyCard}>
                       <Pressable accessibilityRole="button" onPress={() => openConversation(conversation)} style={styles.historyOpen}>
                         <TextLabel fontsReady={fontsReady} style={styles.historyTitle}>{conversation.title}</TextLabel>
-                        <TextLabel fontsReady={fontsReady} style={styles.historyMeta}>{assistant?.name.ar || conversation.assistantId} · {conversation.messages.length} رسالة</TextLabel>\n                        <TextLabel fontsReady={fontsReady} style={styles.historyDate}>آخر تحديث: {updatedLabel}</TextLabel>
+                        <TextLabel fontsReady={fontsReady} style={styles.historyMeta}>{assistant?.name.ar || conversation.assistantId} · {conversation.messages.length} رسالة</TextLabel>
+                        <TextLabel fontsReady={fontsReady} style={styles.historyDate}>آخر تحديث: {updatedLabel}</TextLabel>
                         {!!preview && <TextLabel fontsReady={fontsReady} style={styles.historyPreview} numberOfLines={2}>{preview}</TextLabel>}
                       </Pressable>
                       {isRenaming ? <View style={styles.renameRow}>
@@ -667,7 +678,8 @@ const styles = StyleSheet.create({
   historyCard: { padding: spacing.md, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, backgroundColor: colors.surface, gap: spacing.sm },
   historyOpen: { gap: 5 },
   historyTitle: { color: colors.textPrimary, fontSize: fontSize.body, fontFamily: fontFamily.semiBold },
-  historyMeta: { color: colors.violetLight, fontSize: fontSize.caption },\n  historyDate: { color: colors.textMuted, fontSize: fontSize.caption - 1 },
+  historyMeta: { color: colors.violetLight, fontSize: fontSize.caption },
+  historyDate: { color: colors.textMuted, fontSize: fontSize.caption - 1 },
   historyPreview: { color: colors.textSecondary, fontSize: fontSize.caption + 1, lineHeight: lineHeight.body - 2 },
   historyActions: { flexDirection: "row", justifyContent: "flex-start", gap: spacing.sm },
   renameRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
