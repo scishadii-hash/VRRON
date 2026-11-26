@@ -424,7 +424,7 @@ export function MainScreen({ fontsReady }: Props) {
                       </Pressable>
                       {isRenaming ? <View style={styles.renameRow}>
                         <TextInput value={renameDraft} onChangeText={setRenameDraft} placeholder="اسم المحادثة" placeholderTextColor={colors.textMuted} style={styles.renameInput} maxLength={54} />
-                        <Pressable onPress={() => { const title = renameDraft.trim(); if (title) setConversations((items) => items.map((item) => item.id === conversation.id ? { ...item, title } : item)); setRenamingConversationId(null); }} style={styles.historyAction}><TextLabel fontsReady={fontsReady} style={styles.historyActionText}>حفظ</TextLabel></Pressable>
+                        <Pressable onPress={() => { const title = renameDraft.trim(); if (title) setConversations((items) => items.map((item) => item.id === conversation.id ? { ...item, title, updatedAt: Date.now() } : item)); setRenamingConversationId(null); }} style={styles.historyAction}><TextLabel fontsReady={fontsReady} style={styles.historyActionText}>حفظ</TextLabel></Pressable>
                       </View> : <View style={styles.historyActions}>
                         <Pressable onPress={() => { setRenamingConversationId(conversation.id); setRenameDraft(conversation.title); }} style={styles.historyAction}><TextLabel fontsReady={fontsReady} style={styles.historyActionText}>تعديل الاسم</TextLabel></Pressable>
                         <Pressable onPress={() => { void shareConversation(conversation); }} style={styles.historyAction}><TextLabel fontsReady={fontsReady} style={styles.historyActionText}>مشاركة</TextLabel></Pressable>
