@@ -196,7 +196,15 @@ export function MainScreen({ fontsReady }: Props) {
     }
   }
 
-  function rateAssistantReply(messageIndex: number, feedback: "helpful" | "unhelpful") {\n    const updated = chatMessages.map((message, index) => index === messageIndex && message.role === "assistant"\n      ? { ...message, feedback: message.feedback === feedback ? undefined : feedback }\n      : message);\n    setChatMessages(updated);\n    if (activeConversationId) updateConversationMessages(activeConversationId, selectedAssistantId, updated);\n  }\n\n  async function shareAssistantReply(content: string) {
+  function rateAssistantReply(messageIndex: number, feedback: "helpful" | "unhelpful") {
+    const updated = chatMessages.map((message, index) => index === messageIndex && message.role === "assistant"
+      ? { ...message, feedback: message.feedback === feedback ? undefined : feedback }
+      : message);
+    setChatMessages(updated);
+    if (activeConversationId) updateConversationMessages(activeConversationId, selectedAssistantId, updated);
+  }
+
+  async function shareAssistantReply(content: string) {
     try {
       await Share.share({ title: "رد من VRRON", message: "رد من VRRON\n\n" + content });
     } catch {
@@ -669,7 +677,9 @@ const styles = StyleSheet.create({
   userBubble: { alignSelf: "flex-end", backgroundColor: "rgba(124, 58, 237, 0.2)", borderColor: "#514078", borderWidth: 1 },
   assistantBubble: { alignSelf: "flex-start", backgroundColor: colors.surfaceRaised, borderColor: colors.border, borderWidth: 1 },
   messageText: { color: colors.textPrimary, fontSize: fontSize.body, lineHeight: lineHeight.body },
-  replyActions: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.xs, marginTop: spacing.sm },\n  replyShareButton: { alignSelf: "flex-start", marginTop: spacing.sm, paddingVertical: 3, paddingHorizontal: spacing.xs },\n  replyFeedbackSelected: { color: "#FBBF24" },
+  replyActions: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.xs, marginTop: spacing.sm },
+  replyShareButton: { alignSelf: "flex-start", marginTop: spacing.sm, paddingVertical: 3, paddingHorizontal: spacing.xs },
+  replyFeedbackSelected: { color: "#FBBF24" },
   replyShareText: { color: colors.violetLight, fontSize: fontSize.caption },
   chatLoading: { color: colors.violetLight, fontSize: fontSize.caption },
   chatError: { color: "#FCA5A5", fontSize: fontSize.caption, lineHeight: lineHeight.body },
