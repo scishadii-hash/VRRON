@@ -184,12 +184,12 @@ export function MainScreen({ fontsReady }: Props) {
   async function shareConversation(conversation: ChatConversation) {
     const assistant = assistants.find((item) => item.id === conversation.assistantId);
     const transcript = conversation.messages.map((message) =>
-      (message.role === "user" ? "أنت" : assistant?.name.ar || "VRRON") + ":\\n" + message.content
-    ).join("\\n\\n");
+      (message.role === "user" ? "أنت" : assistant?.name.ar || "VRRON") + ":\n" + message.content
+    ).join("\n\n");
     try {
       await Share.share({
         title: conversation.title,
-        message: "VRRON · " + conversation.title + "\\nالمساعد: " + (assistant?.name.ar || conversation.assistantId) + "\\n\\n" + transcript,
+        message: "VRRON · " + conversation.title + "\nالمساعد: " + (assistant?.name.ar || conversation.assistantId) + "\n\n" + transcript,
       });
     } catch {
       Alert.alert("تعذّر مشاركة المحادثة", "حاول مرة تانية.");
