@@ -184,18 +184,12 @@ export function MainScreen({ fontsReady }: Props) {
   async function shareConversation(conversation: ChatConversation) {
     const assistant = assistants.find((item) => item.id === conversation.assistantId);
     const transcript = conversation.messages.map((message) =>
-      (message.role === "user" ? "أنت" : assistant?.name.ar || "VRRON") + ":
-" + message.content
-    ).join("
-
-");
+      (message.role === "user" ? "أنت" : assistant?.name.ar || "VRRON") + ":\n" + message.content
+    ).join("\n\n");
     try {
       await Share.share({
         title: conversation.title,
-        message: "VRRON · " + conversation.title + "
-المساعد: " + (assistant?.name.ar || conversation.assistantId) + "
-
-" + transcript,
+        message: "VRRON · " + conversation.title + "\nالمساعد: " + (assistant?.name.ar || conversation.assistantId) + "\n\n" + transcript,
       });
     } catch {
       Alert.alert("تعذّر مشاركة المحادثة", "حاول مرة تانية.");
@@ -212,9 +206,7 @@ export function MainScreen({ fontsReady }: Props) {
 
   async function shareAssistantReply(content: string) {
     try {
-      await Share.share({ title: "رد من VRRON", message: "رد من VRRON
-
-" + content });
+      await Share.share({ title: "رد من VRRON", message: "رد من VRRON\n\n" + content });
     } catch {
       Alert.alert("تعذّرت مشاركة الرد", "حاول مرة تانية.");
     }
@@ -355,8 +347,7 @@ export function MainScreen({ fontsReady }: Props) {
                   عالمك، بإمكانات أوسع
                 </TextLabel>
                 <TextLabel fontsReady={fontsReady} style={styles.headline}>
-                  {"ذكاء واحد.
-رؤى بلا حدود."}
+                  {"ذكاء واحد.\nرؤى بلا حدود."}
                 </TextLabel>
                 <TextLabel fontsReady={fontsReady} style={styles.heroDescription}>
                   مساحة تجمع مساعديك الذكيين في تجربة واحدة، مصممة حولك.
