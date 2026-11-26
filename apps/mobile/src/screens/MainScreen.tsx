@@ -416,7 +416,7 @@ export function MainScreen({ fontsReady }: Props) {
               </View>
               <TextLabel fontsReady={fontsReady} style={styles.settingsNote}>المفضّلون وسجل المحادثات محفوظين على الجهاز، من غير حساب أو مزامنة سحابية حاليًا.</TextLabel>
               <TextLabel fontsReady={fontsReady} style={styles.settingsNote}>
-                إعدادات الحساب والمساعدين ستظهر عند اكتمال ربط الخدمات.
+                تقدر تغيّر المفضّلين في أي وقت، وسجلّك بيظل محفوظ على نفس الجهاز.
               </TextLabel>
             </>
           )}
