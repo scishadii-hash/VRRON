@@ -198,7 +198,7 @@ export function MainScreen({ fontsReady }: Props) {
 
   function rateAssistantReply(messageIndex: number, feedback: "helpful" | "unhelpful") {\n    const updated = chatMessages.map((message, index) => index === messageIndex && message.role === "assistant"\n      ? { ...message, feedback: message.feedback === feedback ? undefined : feedback }\n      : message);\n    setChatMessages(updated);\n    if (activeConversationId) updateConversationMessages(activeConversationId, selectedAssistantId, updated);\n  }\n\n  async function shareAssistantReply(content: string) {
     try {
-      await Share.share({ title: "رد من VRRON", message: "رد من VRRON\\n\\n" + content });
+      await Share.share({ title: "رد من VRRON", message: "رد من VRRON\n\n" + content });
     } catch {
       Alert.alert("تعذّرت مشاركة الرد", "حاول مرة تانية.");
     }
