@@ -231,7 +231,7 @@ export function MainScreen({ fontsReady }: Props) {
               </View>
               <View style={styles.composerPreview}>
                 <TextInput value={chatInput} onChangeText={setChatInput} placeholder="اكتب رسالتك هنا…" placeholderTextColor={colors.textMuted} multiline style={styles.chatInput} editable={!chatBusy} />
-                <Pressable accessibilityRole="button" accessibilityLabel="إرسال الرسالة" onPress={sendChatMessage} disabled={chatBusy || !chatInput.trim() || !apiBase} style={({ pressed }) => [styles.sendButton, (chatBusy || !chatInput.trim() || !apiBase) && styles.sendButtonDisabled, pressed && styles.pressed]}><Text style={styles.sendSymbol}>↑</Text></Pressable>
+                <Pressable accessibilityRole="button" accessibilityLabel="إرسال الرسالة" onPress={() => { void sendChatMessage(); }} disabled={chatBusy || !chatInput.trim() || !apiBase} style={({ pressed }) => [styles.sendButton, (chatBusy || !chatInput.trim() || !apiBase) && styles.sendButtonDisabled, pressed && styles.pressed]}><Text style={styles.sendSymbol}>↑</Text></Pressable>
               </View>            </View>
           )}
 
