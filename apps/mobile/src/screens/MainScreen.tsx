@@ -35,7 +35,7 @@ type AssistantSummary = {
 };
 
 type RegistryStatus = "loading" | "unconfigured" | "ready" | "error";
-type ChatMessage = { role: "user" | "assistant"; content: string };
+type ChatMessage = { role: "user" | "assistant"; content: string; feedback?: "helpful" | "unhelpful" };
 type ChatConversation = {
   id: string;
   assistantId: string;
@@ -196,7 +196,7 @@ export function MainScreen({ fontsReady }: Props) {
     }
   }
 
-  async function shareAssistantReply(content: string) {
+  function rateAssistantReply(messageIndex: number, feedback: "helpful" | "unhelpful") {\n    const updated = chatMessages.map((message, index) => index === messageIndex && message.role === "assistant"\n      ? { ...message, feedback: message.feedback === feedback ? undefined : feedback }\n      : message);\n    setChatMessages(updated);\n    if (activeConversationId) updateConversationMessages(activeConversationId, selectedAssistantId, updated);\n  }\n\n  async function shareAssistantReply(content: string) {
     try {
       await Share.share({ title: "رد من VRRON", message: "رد من VRRON\\n\\n" + content });
     } catch {
@@ -411,7 +411,7 @@ export function MainScreen({ fontsReady }: Props) {
               ) : <>
                 <View style={styles.conversation}>
                   {chatMessages.length === 0 && <View style={styles.chatStarter}><TextLabel fontsReady={fontsReady} style={styles.chatWelcome}>ابدأ محادثتك مع {assistants.find((item) => item.id === selectedAssistantId)?.name.ar || "VRRON General"}</TextLabel><View style={styles.suggestionList}>{["ساعدني أبدأ", "اشرح لي فكرة ببساطة", "اقترح عليّ خطة"].map((suggestion) => <Pressable key={suggestion} onPress={() => setChatInput(suggestion)} style={styles.suggestionChip}><TextLabel fontsReady={fontsReady} style={styles.suggestionText}>{suggestion}</TextLabel></Pressable>)}</View></View>}
-                  {chatMessages.map((message, index) => <View key={index} style={[styles.messageBubble, message.role === "user" ? styles.userBubble : styles.assistantBubble]}><TextLabel fontsReady={fontsReady} style={styles.messageText}>{message.content}</TextLabel>{message.role === "assistant" && <Pressable accessibilityRole="button" accessibilityLabel="مشاركة رد المساعد" onPress={() => { void shareAssistantReply(message.content); }} style={styles.replyShareButton}><TextLabel fontsReady={fontsReady} style={styles.replyShareText}>مشاركة الرد ↗</TextLabel></Pressable>}</View>)}
+                  {chatMessages.map((message, index) => <View key={index} style={[styles.messageBubble, message.role === "user" ? styles.userBubble : styles.assistantBubble]}><TextLabel fontsReady={fontsReady} style={styles.messageText}>{message.content}</TextLabel>{message.role === "assistant" && <View style={styles.replyActions}><Pressable accessibilityRole="button" accessibilityLabel="الرد مفيد" accessibilityState={{ selected: message.feedback === "helpful" }} onPress={() => rateAssistantReply(index, "helpful")} style={styles.replyShareButton}><TextLabel fontsReady={fontsReady} style={[styles.replyShareText, message.feedback === "helpful" && styles.replyFeedbackSelected]}>👍</TextLabel></Pressable><Pressable accessibilityRole="button" accessibilityLabel="الرد غير مفيد" accessibilityState={{ selected: message.feedback === "unhelpful" }} onPress={() => rateAssistantReply(index, "unhelpful")} style={styles.replyShareButton}><TextLabel fontsReady={fontsReady} style={[styles.replyShareText, message.feedback === "unhelpful" && styles.replyFeedbackSelected]}>👎</TextLabel></Pressable><Pressable accessibilityRole="button" accessibilityLabel="مشاركة رد المساعد" onPress={() => { void shareAssistantReply(message.content); }} style={styles.replyShareButton}><TextLabel fontsReady={fontsReady} style={styles.replyShareText}>مشاركة الرد ↗</TextLabel></Pressable></View>}</View>)}
                   {chatBusy && <TextLabel fontsReady={fontsReady} style={styles.chatLoading}>VRRON يفكر…</TextLabel>}
                   {!!chatError && <View style={styles.chatErrorBox}><TextLabel fontsReady={fontsReady} style={styles.chatError}>{chatError}</TextLabel><Pressable accessibilityRole="button" accessibilityLabel="إعادة إرسال آخر رسالة" onPress={() => { void sendChatMessage(true); }} disabled={chatBusy} style={styles.retryButton}><TextLabel fontsReady={fontsReady} style={styles.retryText}>إعادة المحاولة ↻</TextLabel></Pressable></View>}
                 </View>
@@ -669,7 +669,7 @@ const styles = StyleSheet.create({
   userBubble: { alignSelf: "flex-end", backgroundColor: "rgba(124, 58, 237, 0.2)", borderColor: "#514078", borderWidth: 1 },
   assistantBubble: { alignSelf: "flex-start", backgroundColor: colors.surfaceRaised, borderColor: colors.border, borderWidth: 1 },
   messageText: { color: colors.textPrimary, fontSize: fontSize.body, lineHeight: lineHeight.body },
-  replyShareButton: { alignSelf: "flex-start", marginTop: spacing.sm, paddingVertical: 3, paddingHorizontal: spacing.xs },
+  replyActions: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.xs, marginTop: spacing.sm },\n  replyShareButton: { alignSelf: "flex-start", marginTop: spacing.sm, paddingVertical: 3, paddingHorizontal: spacing.xs },\n  replyFeedbackSelected: { color: "#FBBF24" },
   replyShareText: { color: colors.violetLight, fontSize: fontSize.caption },
   chatLoading: { color: colors.violetLight, fontSize: fontSize.caption },
   chatError: { color: "#FCA5A5", fontSize: fontSize.caption, lineHeight: lineHeight.body },
