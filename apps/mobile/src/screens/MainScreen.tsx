@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import {
   I18nManager,
   Pressable,
@@ -48,7 +49,7 @@ function TextLabel({
   style,
   fontsReady,
 }: {
-  children: string;
+  children: ReactNode;
   style?: TextStyle;
   fontsReady: boolean;
 }) {
