@@ -62,6 +62,7 @@ function TextLabel({
 export function MainScreen({ fontsReady }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [assistants, setAssistants] = useState<AssistantSummary[]>([]);
+  const [selectedAssistantId, setSelectedAssistantId] = useState("general");
   const [registryStatus, setRegistryStatus] = useState<RegistryStatus>("loading");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
@@ -84,6 +85,7 @@ export function MainScreen({ fontsReady }: Props) {
       .then((payload) => {
         if (!Array.isArray(payload.assistants)) throw new Error("Invalid registry response");
         setAssistants(payload.assistants);
+        setSelectedAssistantId((current) => payload.assistants?.some((item) => item.id === current) ? current : payload.assistants?.[0]?.id ?? "general");
         setRegistryStatus("ready");
       })
       .catch((error: unknown) => {
@@ -104,7 +106,7 @@ export function MainScreen({ fontsReady }: Props) {
       const response = await fetch(apiBase + "/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ assistantId: "general", messages: nextMessages }),
+        body: JSON.stringify({ assistantId: selectedAssistantId, messages: nextMessages }),
       });
       const payload = await response.json() as { reply?: string; error?: string | { message?: string; code?: string } };
       const apiError = typeof payload.error === "string" ? payload.error : payload.error?.message;
@@ -179,33 +181,19 @@ export function MainScreen({ fontsReady }: Props) {
               </Pressable>
 
               <View style={styles.sectionHeading}>
-                <TextLabel fontsReady={fontsReady} style={styles.sectionTitle}>
-                  منظومتك
-                </TextLabel>
-                <TextLabel fontsReady={fontsReady} style={styles.sectionHint}>
-                  الأساس جاهز، والتجربة تتطور
-                </TextLabel>
+                <TextLabel fontsReady={fontsReady} style={styles.sectionTitle}>مساعدوك</TextLabel>
+                <TextLabel fontsReady={fontsReady} style={styles.sectionHint}>اختار مساعد وابدأ من هنا</TextLabel>
               </View>
-              <View style={styles.infoCard}>
-                <View style={styles.infoIcon}>
-                  <Text style={styles.infoIconText}>✦</Text>
-                </View>
-                <View style={styles.infoText}>
-                  <TextLabel fontsReady={fontsReady} style={styles.infoTitle}>
-                    مساعدون متخصصون
-                  </TextLabel>
-                  <TextLabel fontsReady={fontsReady} style={styles.infoBody}>
-                    سيتم عرض المساعدين الفعليين عند ربط التطبيق بالـCore.
-                  </TextLabel>
-                </View>
-              </View>
+              {registryStatus === "loading" && <View style={styles.infoCard}><TextLabel fontsReady={fontsReady} style={styles.infoBody}>بنحمّل مساعديك من VRRON Core…</TextLabel></View>}
+              {registryStatus === "error" && <Pressable onPress={() => setActiveTab("chats")} style={styles.infoCard}><TextLabel fontsReady={fontsReady} style={styles.infoBody}>تعذّر تحميل المساعدين — افتح المحادثات للتحقق من الاتصال</TextLabel></Pressable>}
+              {registryStatus === "ready" && assistants.map((assistant) => <Pressable key={assistant.id} onPress={() => { setSelectedAssistantId(assistant.id); setChatMessages([]); setChatError(""); setActiveTab("chats"); }} style={({pressed}) => [styles.infoCard, pressed && styles.pressed]}><View style={[styles.infoIcon, assistant.accent === "blue" && styles.assistantBadgeBlue]}><Text style={styles.infoIconText}>✦</Text></View><View style={styles.infoText}><TextLabel fontsReady={fontsReady} style={styles.infoTitle}>{assistant.name.ar || assistant.name.en}</TextLabel><TextLabel fontsReady={fontsReady} style={styles.infoBody}>{assistant.description.ar || assistant.description.en}</TextLabel></View><Text style={styles.cardArrow}>↙</Text></Pressable>)}
             </>
           )}
 
           {activeTab === "chats" && (
             <View style={styles.chatPage}>
-              <TextLabel fontsReady={fontsReady} style={styles.pageTitle}>مساحة المحادثات</TextLabel>
-              <TextLabel fontsReady={fontsReady} style={styles.pageSubtitle}>اختار المساعد المناسب لمهمتك</TextLabel>
+              <TextLabel fontsReady={fontsReady} style={styles.pageTitle}>محادثة {assistants.find((item) => item.id === selectedAssistantId)?.name.ar || "VRRON General"}</TextLabel>
+              <TextLabel fontsReady={fontsReady} style={styles.pageSubtitle}>المساعد المختار: {assistants.find((item) => item.id === selectedAssistantId)?.name.en || selectedAssistantId}</TextLabel>
               <View style={styles.assistantIntro}>
                 <View style={styles.assistantIntroIcon}><Text style={styles.infoIconText}>✦</Text></View>
                 <View style={styles.infoText}>
@@ -223,7 +211,7 @@ export function MainScreen({ fontsReady }: Props) {
                 <View style={styles.phaseTag}><TextLabel fontsReady={fontsReady} style={styles.phaseTagText}>Assistant Registry · Core API</TextLabel></View>
               </View>
               <View style={styles.conversation}>
-                {chatMessages.length === 0 && <TextLabel fontsReady={fontsReady} style={styles.chatWelcome}>ابدأ محادثتك مع VRRON General</TextLabel>}
+                {chatMessages.length === 0 && <TextLabel fontsReady={fontsReady} style={styles.chatWelcome}>ابدأ محادثتك مع {assistants.find((item) => item.id === selectedAssistantId)?.name.ar || "VRRON General"}</TextLabel>}
                 {chatMessages.map((message, index) => <View key={index} style={[styles.messageBubble, message.role === "user" ? styles.userBubble : styles.assistantBubble]}><TextLabel fontsReady={fontsReady} style={styles.messageText}>{message.content}</TextLabel></View>)}
                 {chatBusy && <TextLabel fontsReady={fontsReady} style={styles.chatLoading}>VRRON يفكر…</TextLabel>}
                 {!!chatError && <TextLabel fontsReady={fontsReady} style={styles.chatError}>{chatError}</TextLabel>}
