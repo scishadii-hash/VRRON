@@ -66,6 +66,7 @@ export function MainScreen({ fontsReady }: Props) {
   const [selectedAssistantId, setSelectedAssistantId] = useState("general");
   const [registryStatus, setRegistryStatus] = useState<RegistryStatus>("loading");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatHistoryByAssistant, setChatHistoryByAssistant] = useState<Record<string, ChatMessage[]>>({});
   const [chatInput, setChatInput] = useState("");
   const [chatBusy, setChatBusy] = useState(false);
   const [chatError, setChatError] = useState("");
@@ -105,6 +106,7 @@ export function MainScreen({ fontsReady }: Props) {
     if (retryLast && nextMessages[nextMessages.length - 1]?.role !== "user") return;
     if (!retryLast) {
       setChatMessages(nextMessages);
+      setChatHistoryByAssistant((current) => ({ ...current, [selectedAssistantId]: nextMessages }));
       setChatInput("");
     }
     setChatBusy(true);
@@ -118,7 +120,11 @@ export function MainScreen({ fontsReady }: Props) {
       const payload = await response.json() as { reply?: string; error?: string | { message?: string; code?: string } };
       const apiError = typeof payload.error === "string" ? payload.error : payload.error?.message;
       if (!response.ok || !payload.reply) throw new Error(apiError || "تعذّر الحصول على رد");
-      setChatMessages((current) => [...current, { role: "assistant", content: payload.reply as string }]);
+      setChatMessages((current) => {
+        const updated = [...current, { role: "assistant" as const, content: payload.reply as string }];
+        setChatHistoryByAssistant((history) => ({ ...history, [selectedAssistantId]: updated }));
+        return updated;
+      });
     } catch {
       setChatError("تعذّر إرسال الرسالة. تأكد من نشر تحديث الـCore ثم جرّب مرة أخرى.");
     } finally {
@@ -193,13 +199,13 @@ export function MainScreen({ fontsReady }: Props) {
               </View>
               {registryStatus === "loading" && <View style={styles.infoCard}><TextLabel fontsReady={fontsReady} style={styles.infoBody}>بنحمّل مساعديك من VRRON Core…</TextLabel></View>}
               {registryStatus === "error" && <Pressable onPress={() => setActiveTab("chats")} style={styles.infoCard}><TextLabel fontsReady={fontsReady} style={styles.infoBody}>تعذّر تحميل المساعدين — افتح المحادثات للتحقق من الاتصال</TextLabel></Pressable>}
-              {registryStatus === "ready" && assistants.map((assistant) => <Pressable key={assistant.id} onPress={() => { setSelectedAssistantId(assistant.id); setChatMessages([]); setChatError(""); setActiveTab("chats"); }} style={({pressed}) => [styles.infoCard, pressed && styles.pressed]}><View style={[styles.infoIcon, assistant.accent === "blue" && styles.assistantBadgeBlue]}><Text style={styles.infoIconText}>✦</Text></View><View style={styles.infoText}><TextLabel fontsReady={fontsReady} style={styles.infoTitle}>{assistant.name.ar || assistant.name.en}</TextLabel><TextLabel fontsReady={fontsReady} style={styles.infoBody}>{assistant.description.ar || assistant.description.en}</TextLabel></View><Text style={styles.cardArrow}>↙</Text></Pressable>)}
+              {registryStatus === "ready" && assistants.map((assistant) => <Pressable key={assistant.id} onPress={() => { setSelectedAssistantId(assistant.id); setChatMessages(chatHistoryByAssistant[assistant.id] ?? []); setChatError(""); setActiveTab("chats"); }} style={({pressed}) => [styles.infoCard, pressed && styles.pressed]}><View style={[styles.infoIcon, assistant.accent === "blue" && styles.assistantBadgeBlue]}><Text style={styles.infoIconText}>✦</Text></View><View style={styles.infoText}><TextLabel fontsReady={fontsReady} style={styles.infoTitle}>{assistant.name.ar || assistant.name.en}</TextLabel><TextLabel fontsReady={fontsReady} style={styles.infoBody}>{assistant.description.ar || assistant.description.en}</TextLabel></View><Text style={styles.cardArrow}>↙</Text></Pressable>)}
             </>
           )}
 
           {activeTab === "chats" && (
             <View style={styles.chatPage}>
-              <TextLabel fontsReady={fontsReady} style={styles.pageTitle}>محادثة {assistants.find((item) => item.id === selectedAssistantId)?.name.ar || "VRRON General"}</TextLabel>
+              <View style={styles.chatTitleRow}><TextLabel fontsReady={fontsReady} style={styles.pageTitle}>محادثة {assistants.find((item) => item.id === selectedAssistantId)?.name.ar || "VRRON General"}</TextLabel><Pressable accessibilityRole="button" accessibilityLabel="مسح المحادثة الحالية" onPress={() => { setChatMessages([]); setChatHistoryByAssistant((history) => ({ ...history, [selectedAssistantId]: [] })); setChatError(""); }} style={styles.clearChatButton}><TextLabel fontsReady={fontsReady} style={styles.clearChatText}>محادثة جديدة +</TextLabel></Pressable></View>
               <TextLabel fontsReady={fontsReady} style={styles.pageSubtitle}>المساعد المختار: {assistants.find((item) => item.id === selectedAssistantId)?.name.en || selectedAssistantId}</TextLabel>
               <View style={styles.assistantIntro}>
                 <View style={styles.assistantIntroIcon}><Text style={styles.infoIconText}>✦</Text></View>
@@ -214,11 +220,11 @@ export function MainScreen({ fontsReady }: Props) {
                 {registryStatus === "unconfigured" && <><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>الـCore غير متصل بعد</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>اضبط EXPO_PUBLIC_VRRON_API_URL إذا كنت تستخدم عنوان Core مختلفًا.</TextLabel></>}
                 {registryStatus === "error" && <><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>تعذّر الاتصال بالـCore</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>تحقق من عنوان API واتصال الخدمة، ثم أعد فتح التطبيق.</TextLabel></>}
                 {registryStatus === "ready" && assistants.length === 0 && <><View style={styles.registryOrb}><GlowOrb size={82} rgb={glowRgb.blue} peakAlpha={0.28} /><Text style={styles.registrySymbol}>⌘</Text></View><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>لا يوجد مساعدون مفعّلون</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>اتصل التطبيق بالـCore، لكن لا يوجد مساعد مفعّل حاليًا.</TextLabel></>}
-                {registryStatus === "ready" && assistants.map((assistant) => <Pressable key={assistant.id} accessibilityRole="button" accessibilityState={{ selected: assistant.id === selectedAssistantId }} onPress={() => { if (assistant.id !== selectedAssistantId) { setSelectedAssistantId(assistant.id); setChatMessages([]); setChatError(""); } }} style={({ pressed }) => [styles.assistantRow, assistant.id === selectedAssistantId && styles.assistantRowSelected, pressed && styles.pressed]}><View style={[styles.assistantBadge, assistant.accent === "blue" && styles.assistantBadgeBlue]}><Text style={styles.assistantBadgeSymbol}>✦</Text></View><View style={styles.infoText}><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>{assistant.name.ar || assistant.name.en}</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>{assistant.description.ar || assistant.description.en}</TextLabel></View><TextLabel fontsReady={fontsReady} style={styles.assistantSelectMark}>{assistant.id === selectedAssistantId ? "✓" : "›"}</TextLabel></Pressable>)}
+                {registryStatus === "ready" && assistants.map((assistant) => <Pressable key={assistant.id} accessibilityRole="button" accessibilityState={{ selected: assistant.id === selectedAssistantId }} onPress={() => { if (assistant.id !== selectedAssistantId) { setSelectedAssistantId(assistant.id); setChatMessages(chatHistoryByAssistant[assistant.id] ?? []); setChatError(""); } }} style={({ pressed }) => [styles.assistantRow, assistant.id === selectedAssistantId && styles.assistantRowSelected, pressed && styles.pressed]}><View style={[styles.assistantBadge, assistant.accent === "blue" && styles.assistantBadgeBlue]}><Text style={styles.assistantBadgeSymbol}>✦</Text></View><View style={styles.infoText}><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>{assistant.name.ar || assistant.name.en}</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>{assistant.description.ar || assistant.description.en}</TextLabel></View><TextLabel fontsReady={fontsReady} style={styles.assistantSelectMark}>{assistant.id === selectedAssistantId ? "✓" : "›"}</TextLabel></Pressable>)}
                 <View style={styles.phaseTag}><TextLabel fontsReady={fontsReady} style={styles.phaseTagText}>Assistant Registry · Core API</TextLabel></View>
               </View>
               <View style={styles.conversation}>
-                {chatMessages.length === 0 && <TextLabel fontsReady={fontsReady} style={styles.chatWelcome}>ابدأ محادثتك مع {assistants.find((item) => item.id === selectedAssistantId)?.name.ar || "VRRON General"}</TextLabel>}
+                {chatMessages.length === 0 && <View style={styles.chatStarter}><TextLabel fontsReady={fontsReady} style={styles.chatWelcome}>ابدأ محادثتك مع {assistants.find((item) => item.id === selectedAssistantId)?.name.ar || "VRRON General"}</TextLabel><View style={styles.suggestionList}>{["ساعدني أبدأ", "اشرح لي فكرة ببساطة", "اقترح عليّ خطة"].map((suggestion) => <Pressable key={suggestion} onPress={() => setChatInput(suggestion)} style={styles.suggestionChip}><TextLabel fontsReady={fontsReady} style={styles.suggestionText}>{suggestion}</TextLabel></Pressable>)}</View></View>}
                 {chatMessages.map((message, index) => <View key={index} style={[styles.messageBubble, message.role === "user" ? styles.userBubble : styles.assistantBubble]}><TextLabel fontsReady={fontsReady} style={styles.messageText}>{message.content}</TextLabel></View>)}
                 {chatBusy && <TextLabel fontsReady={fontsReady} style={styles.chatLoading}>VRRON يفكر…</TextLabel>}
                 {!!chatError && <View style={styles.chatErrorBox}><TextLabel fontsReady={fontsReady} style={styles.chatError}>{chatError}</TextLabel><Pressable accessibilityRole="button" accessibilityLabel="إعادة إرسال آخر رسالة" onPress={() => sendChatMessage(true)} disabled={chatBusy} style={styles.retryButton}><TextLabel fontsReady={fontsReady} style={styles.retryText}>إعادة المحاولة ↻</TextLabel></Pressable></View>}
@@ -417,6 +423,13 @@ const styles = StyleSheet.create({
   retryText: { color: colors.violetLight, fontSize: fontSize.caption, fontFamily: fontFamily.semiBold },
   assistantRowSelected: { borderColor: colors.violetLight, backgroundColor: colors.surfaceRaised },
   assistantSelectMark: { color: colors.violetLight, fontSize: 18, paddingHorizontal: 4 },
+  chatTitleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.sm },
+  clearChatButton: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: 10, paddingVertical: 7 },
+  clearChatText: { color: colors.violetLight, fontSize: fontSize.caption },
+  chatStarter: { gap: spacing.sm },
+  suggestionList: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, justifyContent: "center" },
+  suggestionChip: { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 8 },
+  suggestionText: { color: colors.textSecondary, fontSize: fontSize.caption },
   assistantRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingVertical: spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
   assistantBadge: { width: 42, height: 42, borderRadius: radius.md, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(124, 58, 237, 0.18)" },
   assistantBadgeBlue: { backgroundColor: "rgba(59, 130, 246, 0.18)" },
