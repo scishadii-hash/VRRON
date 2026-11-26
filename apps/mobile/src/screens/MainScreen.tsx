@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import {
   Alert,
@@ -87,6 +87,8 @@ export function MainScreen({ fontsReady }: Props) {
   const [renameDraft, setRenameDraft] = useState("");
   const [chatInput, setChatInput] = useState("");
   const [chatBusy, setChatBusy] = useState(false);
+  const chatBusyRef = useRef(false);
+  const [registryRefreshKey, setRegistryRefreshKey] = useState(0);
   const [chatError, setChatError] = useState("");
   const apiBase = (process.env.EXPO_PUBLIC_VRRON_API_URL ?? "https://vrron.sci-shadii.workers.dev").trim().replace(/\/$/, "");
 
@@ -211,10 +213,10 @@ export function MainScreen({ fontsReady }: Props) {
         setRegistryStatus("error");
       });
     return () => controller.abort();
-  }, [apiBase]);
+  }, [apiBase, registryRefreshKey]);
   async function sendChatMessage(retryLast = false) {
     const content = chatInput.trim();
-    if (chatBusy || !apiBase) return;
+    if (chatBusyRef.current || chatBusy || !apiBase || !conversationsReady) return;
     const nextMessages: ChatMessage[] = retryLast
       ? chatMessages
       : [...chatMessages, { role: "user", content }];
@@ -227,6 +229,7 @@ export function MainScreen({ fontsReady }: Props) {
       setActiveConversationId(conversationId);
       setChatInput("");
     }
+    chatBusyRef.current = true;
     setChatBusy(true);
     setChatError("");
     try {
@@ -237,13 +240,18 @@ export function MainScreen({ fontsReady }: Props) {
       });
       const payload = await response.json() as { reply?: string; error?: string | { message?: string; code?: string } };
       const apiError = typeof payload.error === "string" ? payload.error : payload.error?.message;
-      if (!response.ok || !payload.reply) throw new Error(apiError || "تعذّر الحصول على رد");
+      if (!response.ok) throw new Error(apiError || "الخدمة ردّت بكود " + response.status);
+      if (!payload.reply) throw new Error("وصل رد من غير محتوى. جرّب مرة تانية.");
       const updated = [...nextMessages, { role: "assistant" as const, content: payload.reply as string }];
       setChatMessages(updated);
       updateConversationMessages(conversationId, selectedAssistantId, updated);
-    } catch {
-      setChatError("تعذّر إرسال الرسالة. تأكد من نشر تحديث الـCore ثم جرّب مرة أخرى.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "حصل خطأ غير متوقع.";
+      setChatError(message.includes("Network request failed") || message.includes("fetch")
+        ? "مفيش اتصال بالـCore حاليًا. راجع الإنترنت واضغط إعادة المحاولة."
+        : message);
     } finally {
+      chatBusyRef.current = false;
       setChatBusy(false);
     }
   }
@@ -335,9 +343,9 @@ export function MainScreen({ fontsReady }: Props) {
               <View style={styles.registryCard}>
                 {registryStatus === "loading" && <TextLabel fontsReady={fontsReady} style={styles.registryBody}>جارٍ تحميل قائمة المساعدين من VRRON Core…</TextLabel>}
                 {registryStatus === "unconfigured" && <><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>الـCore غير متصل بعد</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>اضبط EXPO_PUBLIC_VRRON_API_URL إذا كنت تستخدم عنوان Core مختلفًا.</TextLabel></>}
-                {registryStatus === "error" && <><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>تعذّر الاتصال بالـCore</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>تحقق من عنوان API واتصال الخدمة، ثم أعد فتح التطبيق.</TextLabel></>}
+                {registryStatus === "error" && <><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>تعذّر الاتصال بالـCore</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>راجع الإنترنت، وحاول تحديث قائمة المساعدين.</TextLabel><Pressable accessibilityRole="button" onPress={() => setRegistryRefreshKey((key) => key + 1)} style={styles.retryButton}><TextLabel fontsReady={fontsReady} style={styles.retryText}>إعادة الاتصال ↻</TextLabel></Pressable></>}
                 {registryStatus === "ready" && assistants.length === 0 && <><View style={styles.registryOrb}><GlowOrb size={82} rgb={glowRgb.blue} peakAlpha={0.28} /><Text style={styles.registrySymbol}>⌘</Text></View><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>لا يوجد مساعدون مفعّلون</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>اتصل التطبيق بالـCore، لكن لا يوجد مساعد مفعّل حاليًا.</TextLabel></>}
-                {registryStatus === "ready" && assistants.map((assistant) => <Pressable key={assistant.id} accessibilityRole="button" accessibilityState={{ selected: assistant.id === selectedAssistantId }} onPress={() => { if (assistant.id !== selectedAssistantId) { setSelectedAssistantId(assistant.id); const latest = conversations.filter((item) => item.assistantId === assistant.id).sort((a, b) => b.updatedAt - a.updatedAt)[0]; if (latest) openConversation(latest); else startNewChat(); setSelectedAssistantId(assistant.id); setChatError(""); } }} style={({ pressed }) => [styles.assistantRow, assistant.id === selectedAssistantId && styles.assistantRowSelected, pressed && styles.pressed]}><View style={[styles.assistantBadge, assistant.accent === "blue" && styles.assistantBadgeBlue]}><Text style={styles.assistantBadgeSymbol}>✦</Text></View><View style={styles.infoText}><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>{assistant.name.ar || assistant.name.en}</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>{assistant.description.ar || assistant.description.en}</TextLabel></View><TextLabel fontsReady={fontsReady} style={styles.assistantSelectMark}>{assistant.id === selectedAssistantId ? "✓" : "›"}</TextLabel></Pressable>)}
+                {registryStatus === "ready" && assistants.map((assistant) => <Pressable key={assistant.id} accessibilityRole="button" accessibilityState={{ selected: assistant.id === selectedAssistantId }} onPress={() => { if (assistant.id !== selectedAssistantId) { setSelectedAssistantId(assistant.id); const latest = conversations.filter((item) => item.assistantId === assistant.id).sort((a, b) => b.updatedAt - a.updatedAt)[0]; if (latest) openConversation(latest); else startNewChat(); setSelectedAssistantId(assistant.id); setChatError(""); } }} style={({ pressed }) => [styles.assistantRow, assistant.id === selectedAssistantId && styles.assistantRowSelected, pressed && styles.pressed]}><View style={[styles.assistantBadge, assistant.accent === "blue" && styles.assistantBadgeBlue]}><Text style={styles.assistantBadgeSymbol}>{favoriteAssistantIds.includes(assistant.id) ? "★" : "✦"}</Text></View><View style={styles.infoText}><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>{assistant.name.ar || assistant.name.en}</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>{assistant.description.ar || assistant.description.en}</TextLabel></View><TextLabel fontsReady={fontsReady} style={styles.assistantSelectMark}>{assistant.id === selectedAssistantId ? "✓" : "›"}</TextLabel></Pressable>)}
                 <View style={styles.phaseTag}><TextLabel fontsReady={fontsReady} style={styles.phaseTagText}>Assistant Registry · Core API</TextLabel></View>
               </View>
               {showConversationHistory ? (
@@ -373,7 +381,7 @@ export function MainScreen({ fontsReady }: Props) {
                 </View>
                 <View style={styles.composerPreview}>
                   <TextInput value={chatInput} onChangeText={setChatInput} placeholder="اكتب رسالتك هنا…" placeholderTextColor={colors.textMuted} multiline style={styles.chatInput} editable={!chatBusy} />
-                  <Pressable accessibilityRole="button" accessibilityLabel="إرسال الرسالة" onPress={() => { void sendChatMessage(); }} disabled={chatBusy || !chatInput.trim() || !apiBase} style={({ pressed }) => [styles.sendButton, (chatBusy || !chatInput.trim() || !apiBase) && styles.sendButtonDisabled, pressed && styles.pressed]}><Text style={styles.sendSymbol}>↑</Text></Pressable>
+                  <Pressable accessibilityRole="button" accessibilityLabel="إرسال الرسالة" onPress={() => { void sendChatMessage(); }} disabled={chatBusy || !chatInput.trim() || !apiBase || !conversationsReady} style={({ pressed }) => [styles.sendButton, (chatBusy || !chatInput.trim() || !apiBase || !conversationsReady) && styles.sendButtonDisabled, pressed && styles.pressed]}><Text style={styles.sendSymbol}>↑</Text></Pressable>
                 </View>
               </>}
             </View>
