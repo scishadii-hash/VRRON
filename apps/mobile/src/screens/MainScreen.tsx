@@ -95,12 +95,18 @@ export function MainScreen({ fontsReady }: Props) {
       });
     return () => controller.abort();
   }, [apiBase]);
-  async function sendChatMessage() {
+  async function sendChatMessage(retryLast = false) {
     const content = chatInput.trim();
-    if (!content || chatBusy || !apiBase) return;
-    const nextMessages: ChatMessage[] = [...chatMessages, { role: "user", content }];
-    setChatMessages(nextMessages);
-    setChatInput("");
+    if (chatBusy || !apiBase) return;
+    const nextMessages: ChatMessage[] = retryLast
+      ? chatMessages
+      : [...chatMessages, { role: "user", content }];
+    if (!retryLast && !content) return;
+    if (retryLast && nextMessages[nextMessages.length - 1]?.role !== "user") return;
+    if (!retryLast) {
+      setChatMessages(nextMessages);
+      setChatInput("");
+    }
     setChatBusy(true);
     setChatError("");
     try {
@@ -208,14 +214,14 @@ export function MainScreen({ fontsReady }: Props) {
                 {registryStatus === "unconfigured" && <><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>الـCore غير متصل بعد</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>اضبط EXPO_PUBLIC_VRRON_API_URL إذا كنت تستخدم عنوان Core مختلفًا.</TextLabel></>}
                 {registryStatus === "error" && <><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>تعذّر الاتصال بالـCore</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>تحقق من عنوان API واتصال الخدمة، ثم أعد فتح التطبيق.</TextLabel></>}
                 {registryStatus === "ready" && assistants.length === 0 && <><View style={styles.registryOrb}><GlowOrb size={82} rgb={glowRgb.blue} peakAlpha={0.28} /><Text style={styles.registrySymbol}>⌘</Text></View><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>لا يوجد مساعدون مفعّلون</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>اتصل التطبيق بالـCore، لكن لا يوجد مساعد مفعّل حاليًا.</TextLabel></>}
-                {registryStatus === "ready" && assistants.map((assistant) => <View key={assistant.id} style={styles.assistantRow}><View style={[styles.assistantBadge, assistant.accent === "blue" && styles.assistantBadgeBlue]}><Text style={styles.assistantBadgeSymbol}>✦</Text></View><View style={styles.infoText}><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>{assistant.name.ar || assistant.name.en}</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>{assistant.description.ar || assistant.description.en}</TextLabel></View></View>)}
+                {registryStatus === "ready" && assistants.map((assistant) => <Pressable key={assistant.id} accessibilityRole="button" accessibilityState={{ selected: assistant.id === selectedAssistantId }} onPress={() => { if (assistant.id !== selectedAssistantId) { setSelectedAssistantId(assistant.id); setChatMessages([]); setChatError(""); } }} style={({ pressed }) => [styles.assistantRow, assistant.id === selectedAssistantId && styles.assistantRowSelected, pressed && styles.pressed]}><View style={[styles.assistantBadge, assistant.accent === "blue" && styles.assistantBadgeBlue]}><Text style={styles.assistantBadgeSymbol}>✦</Text></View><View style={styles.infoText}><TextLabel fontsReady={fontsReady} style={styles.registryTitle}>{assistant.name.ar || assistant.name.en}</TextLabel><TextLabel fontsReady={fontsReady} style={styles.registryBody}>{assistant.description.ar || assistant.description.en}</TextLabel></View><TextLabel fontsReady={fontsReady} style={styles.assistantSelectMark}>{assistant.id === selectedAssistantId ? "✓" : "›"}</TextLabel></Pressable>)}
                 <View style={styles.phaseTag}><TextLabel fontsReady={fontsReady} style={styles.phaseTagText}>Assistant Registry · Core API</TextLabel></View>
               </View>
               <View style={styles.conversation}>
                 {chatMessages.length === 0 && <TextLabel fontsReady={fontsReady} style={styles.chatWelcome}>ابدأ محادثتك مع {assistants.find((item) => item.id === selectedAssistantId)?.name.ar || "VRRON General"}</TextLabel>}
                 {chatMessages.map((message, index) => <View key={index} style={[styles.messageBubble, message.role === "user" ? styles.userBubble : styles.assistantBubble]}><TextLabel fontsReady={fontsReady} style={styles.messageText}>{message.content}</TextLabel></View>)}
                 {chatBusy && <TextLabel fontsReady={fontsReady} style={styles.chatLoading}>VRRON يفكر…</TextLabel>}
-                {!!chatError && <TextLabel fontsReady={fontsReady} style={styles.chatError}>{chatError}</TextLabel>}
+                {!!chatError && <View style={styles.chatErrorBox}><TextLabel fontsReady={fontsReady} style={styles.chatError}>{chatError}</TextLabel><Pressable accessibilityRole="button" accessibilityLabel="إعادة إرسال آخر رسالة" onPress={() => sendChatMessage(true)} disabled={chatBusy} style={styles.retryButton}><TextLabel fontsReady={fontsReady} style={styles.retryText}>إعادة المحاولة ↻</TextLabel></Pressable></View>}
               </View>
               <View style={styles.composerPreview}>
                 <TextInput value={chatInput} onChangeText={setChatInput} placeholder="اكتب رسالتك هنا…" placeholderTextColor={colors.textMuted} multiline style={styles.chatInput} editable={!chatBusy} />
@@ -406,6 +412,11 @@ const styles = StyleSheet.create({
   assistantIntro: { flexDirection: "row", alignItems: "center", gap: spacing.md, padding: spacing.md, backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
   assistantIntroIcon: { width: 40, height: 40, borderRadius: radius.md, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(124, 58, 237, 0.16)" },
   registryCard: { alignItems: "stretch", padding: spacing.lg, gap: spacing.md, backgroundColor: colors.surfaceRaised, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border },
+  chatErrorBox: { gap: 8, alignItems: "flex-start" },
+  retryButton: { borderWidth: 1, borderColor: colors.violetLight, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 7 },
+  retryText: { color: colors.violetLight, fontSize: fontSize.caption, fontFamily: fontFamily.semiBold },
+  assistantRowSelected: { borderColor: colors.violetLight, backgroundColor: colors.surfaceRaised },
+  assistantSelectMark: { color: colors.violetLight, fontSize: 18, paddingHorizontal: 4 },
   assistantRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingVertical: spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
   assistantBadge: { width: 42, height: 42, borderRadius: radius.md, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(124, 58, 237, 0.18)" },
   assistantBadgeBlue: { backgroundColor: "rgba(59, 130, 246, 0.18)" },
