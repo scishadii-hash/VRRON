@@ -79,6 +79,7 @@ export function MainScreen({ fontsReady }: Props) {
   const [registryStatus, setRegistryStatus] = useState<RegistryStatus>("loading");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
+  const [favoriteAssistantIds, setFavoriteAssistantIds] = useState<string[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [conversationsReady, setConversationsReady] = useState(false);
   const [showConversationHistory, setShowConversationHistory] = useState(false);
@@ -103,6 +104,7 @@ export function MainScreen({ fontsReady }: Props) {
         const saved = JSON.parse(await FileSystem.readAsStringAsync(conversationsFile)) as {
           conversations?: ChatConversation[];
           activeConversationId?: string | null;
+          favoriteAssistantIds?: string[];
         };
         if (!mounted || !Array.isArray(saved.conversations)) return;
         const validConversations = saved.conversations.filter((item) =>
@@ -110,6 +112,7 @@ export function MainScreen({ fontsReady }: Props) {
           Array.isArray(item.messages) && typeof item.updatedAt === "number"
         );
         setConversations(validConversations);
+        if (Array.isArray(saved.favoriteAssistantIds)) setFavoriteAssistantIds(saved.favoriteAssistantIds.filter((id) => typeof id === "string"));
         const savedActive = validConversations.find((item) => item.id === saved.activeConversationId);
         if (savedActive) {
           setActiveConversationId(savedActive.id);
@@ -130,11 +133,11 @@ export function MainScreen({ fontsReady }: Props) {
     if (!conversationsReady || !conversationsFile) return;
     void FileSystem.writeAsStringAsync(
       conversationsFile,
-      JSON.stringify({ conversations, activeConversationId }),
+      JSON.stringify({ conversations, activeConversationId, favoriteAssistantIds }),
     ).catch(() => {
       // Chat remains usable if device storage is temporarily unavailable.
     });
-  }, [conversations, activeConversationId, conversationsReady, conversationsFile]);
+  }, [conversations, activeConversationId, favoriteAssistantIds, conversationsReady, conversationsFile]);
 
   function updateConversationMessages(conversationId: string, assistantId: string, messages: ChatMessage[]) {
     const firstUserMessage = messages.find((message) => message.role === "user")?.content ?? "";
@@ -166,6 +169,12 @@ export function MainScreen({ fontsReady }: Props) {
     setChatError("");
     setChatInput("");
     setShowConversationHistory(false);
+  }
+
+  function toggleFavoriteAssistant(assistantId: string) {
+    setFavoriteAssistantIds((current) => current.includes(assistantId)
+      ? current.filter((id) => id !== assistantId)
+      : [...current, assistantId]);
   }
 
   function deleteConversation(conversationId: string) {
@@ -240,6 +249,7 @@ export function MainScreen({ fontsReady }: Props) {
   }
 
   const isRtl = I18nManager.isRTL;
+  const favoriteAssistants = assistants.filter((assistant) => favoriteAssistantIds.includes(assistant.id));
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -380,8 +390,31 @@ export function MainScreen({ fontsReady }: Props) {
               <View style={styles.settingsCard}>
                 <SettingRow fontsReady={fontsReady} title="لغة الواجهة" value="العربية" />
                 <SettingRow fontsReady={fontsReady} title="اتجاه العرض" value={isRtl ? "من اليمين إلى اليسار" : "من اليسار إلى اليمين"} />
+                <SettingRow fontsReady={fontsReady} title="حالة VRRON Core" value={registryStatus === "ready" ? "متصل" : registryStatus === "loading" ? "جارٍ الاتصال…" : "غير متصل"} />
+                <SettingRow fontsReady={fontsReady} title="المحادثات المحفوظة" value={String(conversations.length)} />
                 <SettingRow fontsReady={fontsReady} title="إصدار التطبيق" value="0.1.0 · تأسيسي" last />
               </View>
+              <View style={styles.settingsFavorites}>
+                <View style={styles.sectionHeading}>
+                  <TextLabel fontsReady={fontsReady} style={styles.sectionTitle}>المساعدون المفضّلون</TextLabel>
+                  <TextLabel fontsReady={fontsReady} style={styles.sectionHint}>اختار المساعدين اللي تحب توصل لهم بسرعة</TextLabel>
+                </View>
+                {assistants.length === 0 && <TextLabel fontsReady={fontsReady} style={styles.settingsNote}>قائمة المساعدين هتظهر بعد الاتصال بالـCore.</TextLabel>}
+                {assistants.length > 0 && favoriteAssistants.length === 0 && <TextLabel fontsReady={fontsReady} style={styles.settingsNote}>لسه مفيش مساعد مفضّل. اضغط على النجمة بجانب أي مساعد هنا.</TextLabel>}
+                {assistants.map((assistant) => {
+                  const favorite = favoriteAssistantIds.includes(assistant.id);
+                  return <View key={assistant.id} style={styles.favoriteRow}>
+                    <View style={styles.infoText}>
+                      <TextLabel fontsReady={fontsReady} style={styles.infoTitle}>{assistant.name.ar || assistant.name.en}</TextLabel>
+                      <TextLabel fontsReady={fontsReady} style={styles.infoBody}>{assistant.description.ar || assistant.description.en}</TextLabel>
+                    </View>
+                    <Pressable accessibilityRole="button" accessibilityLabel={favorite ? "إزالة من المفضّلين" : "إضافة للمفضّلين"} accessibilityState={{ selected: favorite }} onPress={() => toggleFavoriteAssistant(assistant.id)} style={styles.favoriteButton}>
+                      <Text style={[styles.favoriteSymbol, favorite && styles.favoriteSymbolSelected]}>{favorite ? "★" : "☆"}</Text>
+                    </Pressable>
+                  </View>;
+                })}
+              </View>
+              <TextLabel fontsReady={fontsReady} style={styles.settingsNote}>المفضّلون وسجل المحادثات محفوظين على الجهاز، من غير حساب أو مزامنة سحابية حاليًا.</TextLabel>
               <TextLabel fontsReady={fontsReady} style={styles.settingsNote}>
                 إعدادات الحساب والمساعدين ستظهر عند اكتمال ربط الخدمات.
               </TextLabel>
@@ -612,6 +645,11 @@ const styles = StyleSheet.create({
   pageTitle: { color: colors.textPrimary, fontSize: fontSize.headline, fontFamily: fontFamily.bold, marginTop: spacing.xl },
   pageSubtitle: { color: colors.textSecondary, fontSize: fontSize.body, marginTop: spacing.xs, marginBottom: spacing.lg },
   settingsCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, paddingHorizontal: spacing.lg },
+  settingsFavorites: { gap: spacing.md, padding: spacing.md, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, backgroundColor: colors.surface },
+  favoriteRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingVertical: spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+  favoriteButton: { width: 40, height: 40, alignItems: "center", justifyContent: "center", borderRadius: radius.md, backgroundColor: colors.surfaceRaised },
+  favoriteSymbol: { color: colors.textMuted, fontSize: 25 },
+  favoriteSymbolSelected: { color: "#FBBF24" },
   settingRow: { paddingVertical: spacing.lg, gap: spacing.xs },
   settingDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
   settingTitle: { color: colors.textPrimary, fontSize: fontSize.body },
