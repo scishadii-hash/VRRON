@@ -286,7 +286,7 @@ export function MainScreen({ fontsReady }: Props) {
       const response = await fetch(apiBase + "/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ assistantId: selectedAssistantId, messages: nextMessages }),
+        body: JSON.stringify({ assistantId: selectedAssistantId, messages: nextMessages.map(({ role, content }) => ({ role, content })) }),
       });
       const payload = await response.json() as { reply?: string; error?: string | { message?: string; code?: string } };
       const apiError = typeof payload.error === "string" ? payload.error : payload.error?.message;
