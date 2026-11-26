@@ -267,11 +267,17 @@ export function MainScreen({ fontsReady }: Props) {
   async function sendChatMessage(retryLast = false) {
     const content = chatInput.trim();
     if (chatBusyRef.current || chatBusy || !apiBase || !conversationsReady) return;
+    if (!retryLast && !content) return;
+    if (!retryLast && content.length > 8000) {
+      setChatError("الرسالة طويلة جدًا. قسّمها لرسالتين أو أكتر، والحد الأقصى للرسالة الواحدة 8000 حرف.");
+      return;
+    }
     const nextMessages: ChatMessage[] = retryLast
       ? chatMessages
       : [...chatMessages, { role: "user", content }];
-    if (!retryLast && !content) return;
     if (retryLast && nextMessages[nextMessages.length - 1]?.role !== "user") return;
+    // Keep the full transcript locally, but send only the latest 30 messages accepted by Core.
+    const requestMessages = nextMessages.slice(-30);
     const conversationId = activeConversationId ?? String(Date.now());
     if (!retryLast) {
       setChatMessages(nextMessages);
@@ -286,7 +292,7 @@ export function MainScreen({ fontsReady }: Props) {
       const response = await fetch(apiBase + "/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ assistantId: selectedAssistantId, messages: nextMessages.map(({ role, content }) => ({ role, content })) }),
+        body: JSON.stringify({ assistantId: selectedAssistantId, messages: requestMessages.map(({ role, content }) => ({ role, content })) }),
       });
       const payload = await response.json() as { reply?: string; error?: string | { message?: string; code?: string } };
       const apiError = typeof payload.error === "string" ? payload.error : payload.error?.message;
