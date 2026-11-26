@@ -5,6 +5,7 @@ import {
   I18nManager,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TextInput,
@@ -178,6 +179,21 @@ export function MainScreen({ fontsReady }: Props) {
     setFavoriteAssistantIds((current) => current.includes(assistantId)
       ? current.filter((id) => id !== assistantId)
       : [...current, assistantId]);
+  }
+
+  async function shareConversation(conversation: ChatConversation) {
+    const assistant = assistants.find((item) => item.id === conversation.assistantId);
+    const transcript = conversation.messages.map((message) =>
+      (message.role === "user" ? "أنت" : assistant?.name.ar || "VRRON") + ":\\n" + message.content
+    ).join("\\n\\n");
+    try {
+      await Share.share({
+        title: conversation.title,
+        message: "VRRON · " + conversation.title + "\\nالمساعد: " + (assistant?.name.ar || conversation.assistantId) + "\\n\\n" + transcript,
+      });
+    } catch {
+      Alert.alert("تعذّر مشاركة المحادثة", "حاول مرة تانية.");
+    }
   }
 
   function deleteConversation(conversationId: string) {
@@ -378,6 +394,7 @@ export function MainScreen({ fontsReady }: Props) {
                         <Pressable onPress={() => { const title = renameDraft.trim(); if (title) setConversations((items) => items.map((item) => item.id === conversation.id ? { ...item, title } : item)); setRenamingConversationId(null); }} style={styles.historyAction}><TextLabel fontsReady={fontsReady} style={styles.historyActionText}>حفظ</TextLabel></Pressable>
                       </View> : <View style={styles.historyActions}>
                         <Pressable onPress={() => { setRenamingConversationId(conversation.id); setRenameDraft(conversation.title); }} style={styles.historyAction}><TextLabel fontsReady={fontsReady} style={styles.historyActionText}>تعديل الاسم</TextLabel></Pressable>
+                        <Pressable onPress={() => { void shareConversation(conversation); }} style={styles.historyAction}><TextLabel fontsReady={fontsReady} style={styles.historyActionText}>مشاركة</TextLabel></Pressable>
                         <Pressable onPress={() => deleteConversation(conversation.id)} style={styles.historyAction}><TextLabel fontsReady={fontsReady} style={styles.historyDeleteText}>حذف</TextLabel></Pressable>
                       </View>}
                     </View>;
